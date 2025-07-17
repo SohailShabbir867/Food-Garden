@@ -1,0 +1,33 @@
+{
+  "files": {
+    "main.css": "/Food-Garden/static/css/main.61395199.css",
+    "main.js": "/Food-Garden/static/js/main.cb1d8f60.js",
+    "static/js/453.5998c2ef.chunk.js": "/Food-Garden/static/js/453.5998c2ef.chunk.js",
+    "static/media/Navlogo.png": "/Food-Garden/static/media/Navlogo.f8181bee1186bca4920e.png",
+    "static/media/Cart4.jpg": "/Food-Garden/static/media/Cart4.06ac92777037a42ebee4.jpg",
+    "static/media/Cart3h.jpg": "/Food-Garden/static/media/Cart3h.97a3f4df1efc9459f827.jpg",
+    "static/media/Cart1h.jpg": "/Food-Garden/static/media/Cart1h.4e941fb9c2061a70d9f3.jpg",
+    "static/media/Rools.jpg": "/Food-Garden/static/media/Rools.296e8ab8df75fa59a81d.jpg",
+    "static/media/Burger.jpg": "/Food-Garden/static/media/Burger.8c83869284d8b190d07d.jpg",
+    "static/media/Cart4h.jpg": "/Food-Garden/static/media/Cart4h.de1b3e356e4b9fb5c67a.jpg",
+    "static/media/Cart2.jpg": "/Food-Garden/static/media/Cart2.b070a83b50e9f97feb92.jpg",
+    "static/media/Cart5h.jpg": "/Food-Garden/static/media/Cart5h.3b3edcf20f96d0240d8a.jpg",
+    "static/media/Slider5.jpg": "/Food-Garden/static/media/Slider5.aafa343046000099f87d.jpg",
+    "static/media/Cart1.jpg": "/Food-Garden/static/media/Cart1.0fd337d466a92852bb95.jpg",
+    "static/media/Slider2.jpg": "/Food-Garden/static/media/Slider2.956fde44e3f478af8012.jpg",
+    "static/media/Slider4.jpg": "/Food-Garden/static/media/Slider4.f7bffa7766720b9550df.jpg",
+    "static/media/Slider6.jpg": "/Food-Garden/static/media/Slider6.c3fa5fee65ab1f714cca.jpg",
+    "static/media/Slider3.jpg": "/Food-Garden/static/media/Slider3.7f92d6af8c41604761a7.jpg",
+    "static/media/Cart6.jpg": "/Food-Garden/static/media/Cart6.1d871d2c82359a9b1d85.jpg",
+    "static/media/Slider8.jpg": "/Food-Garden/static/media/Slider8.23151fd531de0db0b574.jpg",
+    "static/media/Cart3.jpg": "/Food-Garden/static/media/Cart3.ab03dded2a76625c08c7.jpg",
+    "index.html": "/Food-Garden/index.html",
+    "main.61395199.css.map": "/Food-Garden/static/css/main.61395199.css.map",
+    "main.cb1d8f60.js.map": "/Food-Garden/static/js/main.cb1d8f60.js.map",
+    "453.5998c2ef.chunk.js.map": "/Food-Garden/static/js/453.5998c2ef.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.61395199.css",
+    "static/js/main.cb1d8f60.js"
+  ]
+}
