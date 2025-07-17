@@ -2,9 +2,11 @@
 
 import React from "react";
 import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-  const { cartItems, removeFromCart, clearCart } = useCart();
+  const { cartItems, removeFromCart,  } = useCart();
+  const navigate = useNavigate();
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {
@@ -29,14 +31,12 @@ const Cart = () => {
                 key={index}
                 className="flex flex-col sm:flex-row bg-white rounded-lg shadow-md overflow-hidden"
               >
-                {/* ✅ Product Image */}
                 <img
                   src={item.image}
                   alt={item.name}
                   className="w-full sm:w-48 h-48 object-cover"
                 />
 
-                {/* Details */}
                 <div className="p-4 flex flex-col justify-between w-full">
                   <div>
                     <h3 className="text-xl font-semibold text-[#A53860]">{item.name}</h3>
@@ -57,10 +57,10 @@ const Cart = () => {
           <div className="mt-10 text-center">
             <h3 className="text-2xl font-bold text-[#3A0519] mb-4">Total: {formatPKR(total)}</h3>
             <button
-              onClick={clearCart}
+              onClick={() => navigate("/payment")}
               className="px-6 py-2 bg-[#e21b70] hover:bg-[#670D2F] text-white rounded-full"
             >
-              Clear Cart
+              Pay Now
             </button>
           </div>
         </>
