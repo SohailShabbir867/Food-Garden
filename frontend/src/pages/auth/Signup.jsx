@@ -1,23 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser, FaEnvelope, FaLock, FaPhone,
-  FaEye, FaEyeSlash, FaUtensils, FaShoppingBag, FaStore
+  FaEye, FaEyeSlash, FaUtensils, FaShoppingBag,
+  FaStar, FaCheckCircle
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
+
+// Food images for the right panel
+import Burger from "../../assets/hero/Burger.jpg";
+import Pizza from "../../assets/hero/Piza.jpg";
+import Rolls from "../../assets/hero/Rools.jpg";
+
+const slides = [
+  { img: Rolls, title: "Crispy Rolls", subtitle: "Authentic street-style rolls from local vendors." },
+  { img: Burger, title: "Loaded Burgers", subtitle: "Stack them high, deliver them hot." },
+  { img: Pizza, title: "Wood-fired Pizza", subtitle: "Thin crust perfection in every bite." },
+];
+
+const vendorPerks = [
+  "List unlimited food items",
+  "Accept & manage orders in real-time",
+  "Get paid directly to your account",
+  "Access vendor analytics dashboard",
+];
 
 const Signup = () => {
   const [role, setRole] = useState("buyer");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "", confirmPassword: "",
   });
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-advance slideshow
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -29,11 +57,9 @@ const Signup = () => {
     }
     setLoading(true);
     await new Promise((res) => setTimeout(res, 900));
-
-    // Mock registration — auto log in after
     const result = login({ email: form.email, password: form.password, role });
     if (result.success) {
-      toast.success(`Account created! Welcome to Food Garden 🎉`);
+      toast.success("Account created! Welcome to Food Garden 🎉");
       if (role === "vendor") navigate("/vendor/dashboard");
       else navigate("/");
     }
@@ -41,172 +67,282 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a0009] via-[#3A0519] to-[#1a0009] flex items-center justify-center p-4 pt-24 relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-[#e21b70] rounded-full filter blur-3xl opacity-10 translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-700 rounded-full filter blur-3xl opacity-10 -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+    <div className="min-h-screen bg-[#1a0009] flex pt-16">
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg relative z-10"
-      >
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-
-          {/* Header */}
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0, rotate: -30 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#e21b70] shadow-lg shadow-[#e21b70]/30 mb-4"
-            >
-              <FaStore className="text-white text-2xl" />
-            </motion.div>
-            <h1 className="text-3xl font-extrabold text-white">Create Account</h1>
-            <p className="text-gray-400 mt-1 text-sm">Join Food Garden today</p>
+      {/* ─────────────────────────────────── */}
+      {/*  LEFT — Form Panel                  */}
+      {/* ─────────────────────────────────── */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 sm:px-12 py-10 overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          {/* Heading */}
+          <div className="mb-7">
+            <p className="text-[#e21b70] font-semibold text-sm uppercase tracking-widest mb-2">
+              Join Food Garden 🍔
+            </p>
+            <h1 className="text-4xl font-extrabold text-white leading-tight">
+              Create your account
+            </h1>
+            <p className="text-gray-500 mt-2 text-sm">
+              Already registered?{" "}
+              <Link to="/login" className="text-[#e21b70] font-semibold hover:underline">
+                Sign in
+              </Link>
+            </p>
           </div>
 
-          {/* Role Selection */}
-          <div className="flex bg-white/10 rounded-2xl p-1 mb-8">
+          {/* Role Toggle */}
+          <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 mb-6">
             {[
-              { id: "buyer", label: "Buyer", icon: <FaShoppingBag />, desc: "Order food" },
-              { id: "vendor", label: "Vendor", icon: <FaUtensils />, desc: "Sell food" },
+              { id: "buyer", label: "Buyer", icon: <FaShoppingBag size={13} />, desc: "Order food" },
+              { id: "vendor", label: "Vendor", icon: <FaUtensils size={13} />, desc: "Sell food" },
             ].map((r) => (
               <button
                 key={r.id}
                 onClick={() => setRole(r.id)}
-                className={`flex-1 flex flex-col items-center py-3 rounded-xl transition-all duration-300 ${
+                className={`flex-1 flex flex-col items-center py-2.5 rounded-xl transition-all duration-300 ${
                   role === r.id
-                    ? "bg-[#e21b70] text-white shadow-md"
-                    : "text-gray-400 hover:text-white"
+                    ? "bg-[#e21b70] text-white shadow-lg shadow-[#e21b70]/20"
+                    : "text-gray-500 hover:text-gray-300"
                 }`}
               >
-                <span className="flex items-center gap-1.5 font-semibold">{r.icon} {r.label}</span>
-                <span className="text-xs opacity-75 mt-0.5">{r.desc}</span>
+                <span className="flex items-center gap-1.5 font-semibold text-sm">{r.icon} {r.label}</span>
+                <span className="text-xs opacity-70 mt-0.5">{r.desc}</span>
               </button>
             ))}
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <div className="relative">
-              <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                name="name"
-                placeholder={role === "vendor" ? "Restaurant / Business Name" : "Full Name"}
-                value={form.name}
-                onChange={handleChange}
-                required
-                className="w-full bg-white/10 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#e21b70] focus:ring-1 focus:ring-[#e21b70] transition"
-              />
-            </div>
-
-            {/* Email */}
-            <div className="relative">
-              <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email address"
-                value={form.email}
-                onChange={handleChange}
-                required
-                className="w-full bg-white/10 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#e21b70] focus:ring-1 focus:ring-[#e21b70] transition"
-              />
-            </div>
-
-            {/* Phone */}
-            <div className="relative">
-              <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone (e.g. 0300-1234567)"
-                value={form.phone}
-                onChange={handleChange}
-                required
-                className="w-full bg-white/10 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#e21b70] focus:ring-1 focus:ring-[#e21b70] transition"
-              />
-            </div>
-
-            {/* Password */}
-            <div className="relative">
-              <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Create password"
-                value={form.password}
-                onChange={handleChange}
-                required
-                className="w-full bg-white/10 border border-white/10 rounded-xl py-3.5 pl-11 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-[#e21b70] focus:ring-1 focus:ring-[#e21b70] transition"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="relative">
-              <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                required
-                className="w-full bg-white/10 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#e21b70] focus:ring-1 focus:ring-[#e21b70] transition"
-              />
-            </div>
-
-            {/* Vendor extra note */}
+          {/* Vendor perks (animated in) */}
+          <AnimatePresence>
             {role === "vendor" && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
-                className="bg-[#e21b70]/10 border border-[#e21b70]/30 rounded-xl p-3 text-sm text-pink-300"
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-5 bg-[#e21b70]/10 border border-[#e21b70]/20 rounded-2xl p-4"
               >
-                🍽️ As a Vendor, your account will be reviewed by our admin before going live.
+                <p className="text-[#e21b70] font-semibold text-sm mb-2.5">What you get as a Vendor:</p>
+                <ul className="space-y-1.5">
+                  {vendorPerks.map((perk) => (
+                    <li key={perk} className="flex items-center gap-2 text-xs text-pink-200">
+                      <FaCheckCircle className="text-[#e21b70] shrink-0" />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
               </motion.div>
             )}
+          </AnimatePresence>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Name */}
+            <div>
+              <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1.5 block">
+                {role === "vendor" ? "Restaurant / Business Name" : "Full Name"}
+              </label>
+              <div className="relative">
+                <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder={role === "vendor" ? "e.g. Royal Burgers Lahore" : "e.g. Ali Khan"}
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1.5 block">Email</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1.5 block">Phone</label>
+              <div className="relative">
+                <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="0300-1234567"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Password row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1.5 block">Password</label>
+                <div className="relative">
+                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-9 pr-9 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition"
+                  >
+                    {showPassword ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1.5 block">Confirm</label>
+                <div className="relative">
+                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="••••••••"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Submit */}
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-[#e21b70] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#e21b70]/30 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-[#e21b70] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#e21b70]/25 disabled:opacity-60 flex items-center justify-center gap-2 mt-1 text-sm"
             >
               {loading ? (
-                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-              ) : `Create ${role === "vendor" ? "Vendor" : ""} Account`}
+              ) : `Create ${role === "vendor" ? "Vendor " : ""}Account →`}
             </motion.button>
           </form>
 
-          <p className="text-center text-gray-400 text-sm mt-6">
-            Already have an account?{" "}
-            <Link to="/login" className="text-[#e21b70] font-semibold hover:text-pink-400 transition">
-              Sign In
-            </Link>
+          <p className="text-gray-700 text-xs text-center mt-5">
+            By signing up, you agree to our{" "}
+            <a href="#" className="text-gray-500 hover:text-[#e21b70] transition underline">Terms of Service</a>
           </p>
+        </motion.div>
+      </div>
+
+      {/* ─────────────────────────────────── */}
+      {/*  RIGHT — Image Panel                */}
+      {/* ─────────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Slideshow */}
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={currentSlide}
+            src={slides[currentSlide].img}
+            alt={slides[currentSlide].title}
+            initial={{ opacity: 0, scale: 1.06 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </AnimatePresence>
+
+        {/* Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a0009]/40 to-transparent" />
+
+        {/* Top badges */}
+        <div className="absolute top-6 left-6 right-6 flex justify-between items-center">
+          <div className="bg-[#e21b70] rounded-2xl px-4 py-2 flex items-center gap-2 shadow-lg">
+            <FaStar className="text-yellow-300 text-sm" />
+            <span className="text-white font-bold text-sm">4.9</span>
+            <span className="text-pink-200 text-xs">Rating</span>
+          </div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-white text-xs font-semibold flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+            500+ Restaurants
+          </div>
         </div>
 
-        <p className="text-center mt-6 text-gray-500 text-sm">
-          <Link to="/" className="hover:text-white transition">← Back to Home</Link>
-        </p>
-      </motion.div>
+        {/* Bottom content */}
+        <div className="absolute bottom-0 left-0 right-0 p-10">
+          {/* Dots */}
+          <div className="flex gap-2 mb-5">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === currentSlide ? "bg-[#e21b70] w-8" : "bg-white/30 w-3"
+                }`}
+              />
+            ))}
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-4xl font-extrabold text-white mb-2">
+                {slides[currentSlide].title}
+              </h2>
+              <p className="text-gray-300 text-base mb-6">
+                {slides[currentSlide].subtitle}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: "500+", label: "Restaurants" },
+              { value: "10K+", label: "Happy Buyers" },
+              { value: "30 min", label: "Avg. Delivery" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 text-center"
+              >
+                <p className="text-white font-extrabold text-lg">{stat.value}</p>
+                <p className="text-gray-400 text-xs mt-0.5">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };
