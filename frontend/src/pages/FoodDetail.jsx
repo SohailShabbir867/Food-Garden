@@ -76,8 +76,8 @@ const FoodDetail = () => {
       quantity,
       vendorName: food.vendorName,
     };
-    for (let i = 0; i < quantity; i++) addToCart({ ...cartItem, id: `${food.id}_${Date.now()}_${i}` });
-    toast.success(`${food.name} added to cart!`);
+    addToCart(cartItem);
+    toast.success(`${quantity}x ${food.name} added to cart!`);
   };
 
   const handleChatVendor = () => {
