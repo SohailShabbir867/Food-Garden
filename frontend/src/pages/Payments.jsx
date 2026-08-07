@@ -85,10 +85,34 @@ const PaymentPage = () => {
 
     setLoading(true);
 
-    // Simulate backend order creation delay
-    await new Promise((res) => setTimeout(res, 1200));
-
     const newOrderId = `FG-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    // Build order record for Buyer Orders history page
+    const newOrderRecord = {
+      id: newOrderId,
+      date: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      status: "Preparing",
+      items: cartItems.map((item) => ({ ...item })),
+      totalAmount: grandTotal,
+      paymentMethod: form.paymentMethod,
+      address: `${form.address}, ${form.area ? form.area + ", " : ""}${form.city}`,
+      customerName: form.fullName,
+      phone: form.phone,
+    };
+
+    try {
+      const existingOrders = JSON.parse(localStorage.getItem("food_garden_orders") || "[]");
+      localStorage.setItem("food_garden_orders", JSON.stringify([newOrderRecord, ...existingOrders]));
+    } catch (e) {
+      console.error("Failed to save order history:", e);
+    }
+
     setPlacedOrderId(newOrderId);
     setLoading(false);
     setOrderComplete(true);
