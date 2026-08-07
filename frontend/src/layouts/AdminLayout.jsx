@@ -1,14 +1,27 @@
 import React from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { FaTachometerAlt, FaUsers, FaStore, FaSignOutAlt } from "react-icons/fa";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { FaTachometerAlt, FaUsers, FaStore, FaSignOutAlt, FaHome, FaUtensils, FaClipboardList } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const AdminLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out.");
+    navigate("/");
+  };
 
   const navItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt /> },
     { name: "Manage Users", path: "/admin/users", icon: <FaUsers /> },
     { name: "Manage Vendors", path: "/admin/vendors", icon: <FaStore /> },
+    { name: "Manage Foods", path: "/admin/foods", icon: <FaUtensils /> },
+    { name: "Manage Orders", path: "/admin/orders", icon: <FaClipboardList /> },
+    { name: "Back to Site", path: "/", icon: <FaHome /> },
   ];
 
   return (
@@ -37,13 +50,13 @@ const AdminLayout = () => {
           })}
         </nav>
         <div className="p-4 border-t border-gray-800">
-          <Link
-            to="/login"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-red-600 hover:text-white transition-colors"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-red-600/80 hover:text-white transition-colors w-full text-left"
           >
             <FaSignOutAlt />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -53,8 +66,13 @@ const AdminLayout = () => {
         <header className="bg-white shadow-sm h-16 flex items-center px-6 justify-between md:justify-end">
           <div className="md:hidden font-bold text-gray-900">Admin Portal</div>
           <div className="flex items-center gap-4">
-            <span className="font-medium text-gray-700">Super Admin</span>
-            <div className="w-8 h-8 rounded-full bg-gray-900 text-[#e21b70] border border-[#e21b70] flex items-center justify-center font-bold">A</div>
+            <div className="text-right hidden sm:block">
+              <p className="font-semibold text-gray-800 text-sm">{user?.name || "Admin"}</p>
+              <p className="text-xs text-gray-500">Super Administrator</p>
+            </div>
+            <div className="w-9 h-9 rounded-full bg-gray-900 text-[#e21b70] border-2 border-[#e21b70] flex items-center justify-center font-bold uppercase">
+              {user?.name?.[0] || "A"}
+            </div>
           </div>
         </header>
 
