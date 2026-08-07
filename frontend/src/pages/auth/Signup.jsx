@@ -1,51 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser, FaEnvelope, FaLock, FaPhone,
-  FaEye, FaEyeSlash, FaUtensils, FaShoppingBag,
-  FaStar, FaCheckCircle
+  FaEye, FaEyeSlash, FaStar
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
-// Food images for the right panel
-import Burger from "../../assets/hero/Burger.jpg";
-import Pizza from "../../assets/hero/Piza.jpg";
-import Rolls from "../../assets/hero/Rools.jpg";
+import SliderImage from "../../assets/slider/signup.jpg";
 
-const slides = [
-  { img: Rolls, title: "Crispy Rolls", subtitle: "Authentic street-style rolls from local vendors." },
-  { img: Burger, title: "Loaded Burgers", subtitle: "Stack them high, deliver them hot." },
-  { img: Pizza, title: "Wood-fired Pizza", subtitle: "Thin crust perfection in every bite." },
-];
-
-const vendorPerks = [
-  "List unlimited food items",
-  "Accept & manage orders in real-time",
-  "Get paid directly to your account",
-  "Access vendor analytics dashboard",
-];
 
 const Signup = () => {
-  const [role, setRole] = useState("buyer");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "", confirmPassword: "",
   });
 
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  // Auto-advance slideshow
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -57,11 +31,10 @@ const Signup = () => {
     }
     setLoading(true);
     await new Promise((res) => setTimeout(res, 900));
-    const result = login({ email: form.email, password: form.password, role });
+    const result = login({ email: form.email, password: form.password });
     if (result.success) {
       toast.success("Account created! Welcome to Food Garden 🎉");
-      if (role === "vendor") navigate("/vendor/dashboard");
-      else navigate("/");
+      navigate("/");
     }
     setLoading(false);
   };
@@ -95,62 +68,20 @@ const Signup = () => {
             </p>
           </div>
 
-          {/* Role Toggle */}
-          <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 mb-6">
-            {[
-              { id: "buyer", label: "Buyer", icon: <FaShoppingBag size={13} />, desc: "Order food" },
-              { id: "vendor", label: "Vendor", icon: <FaUtensils size={13} />, desc: "Sell food" },
-            ].map((r) => (
-              <button
-                key={r.id}
-                onClick={() => setRole(r.id)}
-                className={`flex-1 flex flex-col items-center py-2.5 rounded-xl transition-all duration-300 ${
-                  role === r.id
-                    ? "bg-[#e21b70] text-white shadow-lg shadow-[#e21b70]/20"
-                    : "text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                <span className="flex items-center gap-1.5 font-semibold text-sm">{r.icon} {r.label}</span>
-                <span className="text-xs opacity-70 mt-0.5">{r.desc}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Vendor perks (animated in) */}
-          <AnimatePresence>
-            {role === "vendor" && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-5 bg-[#e21b70]/10 border border-[#e21b70]/20 rounded-2xl p-4"
-              >
-                <p className="text-[#e21b70] font-semibold text-sm mb-2.5">What you get as a Vendor:</p>
-                <ul className="space-y-1.5">
-                  {vendorPerks.map((perk) => (
-                    <li key={perk} className="flex items-center gap-2 text-xs text-pink-200">
-                      <FaCheckCircle className="text-[#e21b70] shrink-0" />
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {/* Name */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1.5 block">
-                {role === "vendor" ? "Restaurant / Business Name" : "Full Name"}
+                Full Name
               </label>
               <div className="relative">
                 <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
                 <input
                   type="text"
                   name="name"
-                  placeholder={role === "vendor" ? "e.g. Royal Burgers Lahore" : "e.g. Ali Khan"}
+                  placeholder="e.g. Ali Khan"
                   value={form.name}
                   onChange={handleChange}
                   required
@@ -246,7 +177,7 @@ const Signup = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-              ) : `Create ${role === "vendor" ? "Vendor " : ""}Account →`}
+              ) : "Create Account →"}
             </motion.button>
           </form>
 
@@ -261,19 +192,12 @@ const Signup = () => {
       {/*  RIGHT — Image Panel                */}
       {/* ─────────────────────────────────── */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Slideshow */}
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentSlide}
-            src={slides[currentSlide].img}
-            alt={slides[currentSlide].title}
-            initial={{ opacity: 0, scale: 1.06 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </AnimatePresence>
+        {/* Static image */}
+        <img
+          src={SliderImage}
+          alt="Food Garden"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/15" />
@@ -294,35 +218,14 @@ const Signup = () => {
 
         {/* Bottom content */}
         <div className="absolute bottom-0 left-0 right-0 p-10">
-          {/* Dots */}
-          <div className="flex gap-2 mb-5">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === currentSlide ? "bg-[#e21b70] w-8" : "bg-white/30 w-3"
-                }`}
-              />
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSlide}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-4xl font-extrabold text-white mb-2">
-                {slides[currentSlide].title}
-              </h2>
-              <p className="text-gray-300 text-base mb-6">
-                {slides[currentSlide].subtitle}
-              </p>
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl font-extrabold text-white mb-2">Start Selling Today</h2>
+            <p className="text-gray-300 text-base mb-6">Join hundreds of vendors earning on Food Garden.</p>
+          </motion.div>
 
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">

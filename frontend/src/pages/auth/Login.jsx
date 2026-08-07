@@ -1,64 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaEnvelope, FaLock, FaEye, FaEyeSlash,
-  FaUtensils, FaShoppingBag, FaStar, FaQuoteLeft
+  FaEnvelope, FaLock, FaEye, FaEyeSlash, FaStar, FaQuoteLeft
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
-// Food images for the right panel slideshow
-import Burger from "../../assets/hero/Burger.jpg";
-import Pizza from "../../assets/hero/Piza.jpg";
-import Rolls from "../../assets/hero/Rools.jpg";
-
-const slides = [
-  {
-    img: Burger,
-    title: "Gourmet Burgers",
-    subtitle: "Juicy, flame-grilled, delivered to your door.",
-  },
-  {
-    img: Pizza,
-    title: "Authentic Pizzas",
-    subtitle: "Wood-fired perfection from local chefs.",
-  },
-  {
-    img: Rolls,
-    title: "Fresh Rolls",
-    subtitle: "Crispy on the outside, flavourful inside.",
-  },
-];
+import SliderImage from "../../assets/slider/loginslider.jpg";
 
 const Login = () => {
-  const [role, setRole] = useState("buyer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  // Auto-advance slideshow
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     await new Promise((res) => setTimeout(res, 800));
-    const result = login({ email, password, role });
+    const result = login({ email, password });
     if (result.success) {
-      toast.success(`Welcome back! Logged in as ${role}.`);
+      toast.success("Welcome back!");
       if (result.role === "vendor") navigate("/vendor/dashboard");
       else if (result.role === "admin") navigate("/admin/dashboard");
       else navigate(from);
@@ -97,25 +66,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Role Toggle */}
-          <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 mb-7">
-            {[
-              { id: "buyer", label: "Buyer", icon: <FaShoppingBag size={13} /> },
-              { id: "vendor", label: "Vendor", icon: <FaUtensils size={13} /> },
-            ].map((r) => (
-              <button
-                key={r.id}
-                onClick={() => setRole(r.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                  role === r.id
-                    ? "bg-[#e21b70] text-white shadow-lg shadow-[#e21b70]/20"
-                    : "text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                {r.icon} {r.label}
-              </button>
-            ))}
-          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -195,19 +145,12 @@ const Login = () => {
       {/*  RIGHT — Image Panel (hidden mobile) */}
       {/* ─────────────────────────────────── */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Slideshow */}
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentSlide}
-            src={slides[currentSlide].img}
-            alt={slides[currentSlide].title}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </AnimatePresence>
+        {/* Static image */}
+        <img
+          src={SliderImage}
+          alt="Food Garden"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
         {/* Dark gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
@@ -225,41 +168,24 @@ const Login = () => {
           <span className="text-pink-200 text-xs">/ 5.0</span>
         </div>
 
-        {/* Slide Content */}
+        {/* Bottom content */}
         <div className="absolute bottom-0 left-0 right-0 p-10">
-          {/* Slide dots */}
-          <div className="flex gap-2 mb-5">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === currentSlide ? "bg-[#e21b70] w-8" : "bg-white/30 w-3"
-                }`}
-              />
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSlide}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-4xl font-extrabold text-white mb-2">
-                {slides[currentSlide].title}
-              </h2>
-              <p className="text-gray-300 text-base">{slides[currentSlide].subtitle}</p>
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl font-extrabold text-white mb-2">
+              Fresh Food, Fast Delivery
+            </h2>
+            <p className="text-gray-300 text-base">Order from the best local restaurants in Pakistan.</p>
+          </motion.div>
 
           {/* Testimonial card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.3 }}
             className="mt-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-start gap-3"
           >
             <FaQuoteLeft className="text-[#e21b70] text-lg shrink-0 mt-1" />
