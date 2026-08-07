@@ -1,14 +1,25 @@
 import React from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { FaTachometerAlt, FaUtensils, FaClipboardList, FaSignOutAlt } from "react-icons/fa";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { FaTachometerAlt, FaUtensils, FaClipboardList, FaSignOutAlt, FaHome } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const VendorLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out.");
+    navigate("/");
+  };
 
   const navItems = [
     { name: "Dashboard", path: "/vendor/dashboard", icon: <FaTachometerAlt /> },
     { name: "Manage Menu", path: "/vendor/menu", icon: <FaUtensils /> },
     { name: "Orders", path: "/vendor/orders", icon: <FaClipboardList /> },
+    { name: "Back to Site", path: "/", icon: <FaHome /> },
   ];
 
   return (
@@ -37,13 +48,13 @@ const VendorLayout = () => {
           })}
         </nav>
         <div className="p-4 border-t border-white/10">
-          <Link
-            to="/login"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-500 hover:text-white transition-colors"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-500/80 hover:text-white transition-colors w-full text-left"
           >
             <FaSignOutAlt />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -53,8 +64,13 @@ const VendorLayout = () => {
         <header className="bg-white shadow-sm h-16 flex items-center px-6 justify-between md:justify-end">
           <div className="md:hidden font-bold text-[#3A0519]">Vendor Portal</div>
           <div className="flex items-center gap-4">
-            <span className="font-medium text-gray-700">Vendor User</span>
-            <div className="w-8 h-8 rounded-full bg-[#e21b70] text-white flex items-center justify-center font-bold">V</div>
+            <div className="text-right hidden sm:block">
+              <p className="font-semibold text-gray-800 text-sm">{user?.name || "Vendor"}</p>
+              <p className="text-xs text-gray-500">Restaurant Vendor</p>
+            </div>
+            <div className="w-9 h-9 rounded-full bg-[#e21b70] text-white flex items-center justify-center font-bold uppercase shadow">
+              {user?.name?.[0] || "V"}
+            </div>
           </div>
         </header>
 

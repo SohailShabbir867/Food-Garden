@@ -1,73 +1,121 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navlogo from "../../assets/logo/Navlogo.png";
-import { FaSearch, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaSearch, FaShoppingCart, FaBars, FaTimes,
+  FaUser, FaSignOutAlt, FaChevronDown, FaTachometerAlt, FaUtensils
+} from "react-icons/fa";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const location = useLocation();
+  const navigate = useNavigate();
   const { cartItems } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
+  const userMenuRef = useRef(null);
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const toggleSearch = () => setShowSearch(!showSearch);
-
-  // Handle Scroll to add glassmorphism effect
+  // Close user dropdown when clicking outside
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setShowSearch(false);
+  }, [location.pathname]);
 
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Menu", path: "/menu" },
     { name: "About", path: "/about" },
-    { name: "Complaint", path: "/contact" },
+    { name: "Contact", path: "/contact" },
   ];
 
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+    toast.success("Logged out successfully.");
+    navigate("/");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/menu?search=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearch(false);
+      setSearchQuery("");
+    }
+  };
+
+  const getDashboardLink = () => {
+    if (user?.role === "vendor") return "/vendor/dashboard";
+    if (user?.role === "admin") return "/admin/dashboard";
+    return "/user/profile";
+  };
+
   return (
-    <header 
+    <header
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? "bg-[#3A0519]/90 backdrop-blur-md shadow-lg py-2" : "bg-[#3A0519] py-4 shadow-md"
+        scrolled
+          ? "bg-[#3A0519]/95 backdrop-blur-md shadow-xl py-2"
+          : "bg-[#3A0519] py-3 shadow-md"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="flex items-center space-x-3 group">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+
+        {/* ── Logo ── */}
+        <Link to="/" className="flex items-center space-x-2.5 group shrink-0">
           <motion.img
-            whileHover={{ rotate: 10, scale: 1.1 }}
+            whileHover={{ rotate: 12, scale: 1.1 }}
+            transition={{ type: "spring", stiffness: 400 }}
             src={Navlogo}
             alt="Food Garden Logo"
-            className="w-12 h-12 object-cover rounded-full shadow-lg border-2 border-white/20"
+            className="w-10 h-10 object-cover rounded-full shadow-lg border-2 border-white/20"
           />
-          <span className="text-2xl sm:text-3xl font-extrabold tracking-wide text-[#e21b70] transition-colors group-hover:text-white">
-            Food<span className="text-white group-hover:text-[#e21b70]">Garden</span>
+          <span className="text-xl sm:text-2xl font-extrabold tracking-wide text-[#e21b70] group-hover:text-white transition-colors duration-300">
+            Food<span className="text-white group-hover:text-[#e21b70] transition-colors duration-300">Garden</span>
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex gap-8 items-center">
+        {/* ── Desktop Nav Links ── */}
+        <nav className="hidden md:flex gap-7 items-center">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
               <Link
                 key={link.name}
                 to={link.path}
-                className={`relative font-medium text-lg transition duration-300 hover:text-[#e21b70] ${
+                className={`relative font-medium text-base transition duration-200 hover:text-[#e21b70] ${
                   isActive ? "text-[#e21b70]" : "text-gray-200"
                 }`}
               >
                 {link.name}
                 {isActive && (
-                  <motion.div 
-                    layoutId="underline" 
-                    className="absolute left-0 -bottom-1 w-full h-[3px] bg-[#e21b70] rounded-full" 
+                  <motion.div
+                    layoutId="nav-underline"
+                    className="absolute left-0 -bottom-1 w-full h-[2.5px] bg-[#e21b70] rounded-full"
                   />
                 )}
               </Link>
@@ -75,40 +123,52 @@ const Navbar = () => {
           })}
         </nav>
 
-        {/* Right Side Actions */}
-        <div className="flex items-center gap-4">
-          
-          {/* Animated Search Bar */}
+        {/* ── Right Actions ── */}
+        <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* Search */}
           <div className="relative flex items-center">
             <AnimatePresence>
               {showSearch && (
-                <motion.input
+                <motion.form
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: 200, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  type="text"
-                  placeholder="Search food..."
-                  className="absolute right-10 px-4 py-2 rounded-full bg-white/10 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#e21b70] border border-white/20 backdrop-blur-sm"
-                />
+                  transition={{ duration: 0.25 }}
+                  onSubmit={handleSearch}
+                  className="absolute right-10 overflow-hidden"
+                >
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search food..."
+                    className="w-full px-4 py-2 rounded-full bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#e21b70] border border-white/20 text-sm"
+                  />
+                </motion.form>
               )}
             </AnimatePresence>
             <button
-              onClick={toggleSearch}
+              onClick={() => setShowSearch(!showSearch)}
               className="p-2 rounded-full hover:bg-white/10 transition-colors text-white"
             >
-              <FaSearch size={20} />
+              <FaSearch size={17} />
             </button>
           </div>
 
-          {/* Cart Icon with Badge */}
-          <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group">
-            <FaShoppingCart size={22} className="group-hover:text-[#e21b70] transition-colors" />
+          {/* Cart */}
+          <Link
+            to="/cart"
+            className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group"
+          >
+            <FaShoppingCart size={20} className="group-hover:text-[#e21b70] transition-colors" />
             <AnimatePresence>
               {cartItems?.length > 0 && (
-                <motion.span 
+                <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
                   className="absolute -top-1 -right-1 bg-[#e21b70] text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-md"
                 >
                   {cartItems.length}
@@ -117,65 +177,158 @@ const Navbar = () => {
             </AnimatePresence>
           </Link>
 
-          {/* Login / Signup Buttons (Desktop) */}
-          <div className="hidden md:flex gap-3 ml-2 border-l border-white/20 pl-4">
-            <Link to="/admin" className="px-4 py-2 text-white font-medium hover:text-[#e21b70] transition">
-              Admin
-            </Link>
-            <Link to="/login" className="px-5 py-2 bg-[#e21b70] hover:bg-white hover:text-[#e21b70] text-white font-bold rounded-full transition-all shadow-md">
-              Login
-            </Link>
+          {/* Auth Area (Desktop) */}
+          <div className="hidden md:flex items-center gap-2 border-l border-white/20 pl-3">
+            {isAuthenticated ? (
+              /* User Dropdown */
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/10 transition text-white"
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#e21b70] flex items-center justify-center text-xs font-bold uppercase shadow">
+                    {user?.name?.[0] || "U"}
+                  </div>
+                  <span className="text-sm font-medium max-w-[90px] truncate">{user?.name}</span>
+                  <motion.div animate={{ rotate: showUserMenu ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <FaChevronDown size={11} className="text-gray-400" />
+                  </motion.div>
+                </button>
+
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-52 bg-[#2a0312] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                    >
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <p className="text-white font-semibold text-sm truncate">{user?.name}</p>
+                        <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
+                      </div>
+                      <div className="py-2">
+                        <Link
+                          to={getDashboardLink()}
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm"
+                        >
+                          <FaTachometerAlt size={13} /> Dashboard
+                        </Link>
+                        <Link
+                          to="/user/profile"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm"
+                        >
+                          <FaUser size={13} /> Profile
+                        </Link>
+                        {user?.role === "vendor" && (
+                          <Link
+                            to="/vendor/menu"
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm"
+                          >
+                            <FaUtensils size={13} /> My Menu
+                          </Link>
+                        )}
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition text-sm border-t border-white/10 mt-1"
+                        >
+                          <FaSignOutAlt size={13} /> Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-gray-200 font-medium hover:text-[#e21b70] transition text-sm"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 bg-[#e21b70] hover:bg-pink-600 text-white font-bold rounded-full transition-all shadow-md text-sm"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Hamburger */}
           <button
             className="md:hidden p-2 text-white hover:text-[#e21b70] transition"
-            onClick={toggleMenu}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            {isMenuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* ── Mobile Menu ── */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#3A0519]/95 backdrop-blur-xl border-t border-white/10"
+            className="md:hidden bg-[#3A0519]/98 backdrop-blur-xl border-t border-white/10 overflow-hidden"
           >
-            <div className="flex flex-col items-center py-6 gap-6">
+            <div className="flex flex-col px-6 py-6 gap-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`text-xl font-medium transition ${
-                    location.pathname === link.path ? "text-[#e21b70]" : "text-white"
+                  className={`text-lg font-medium transition py-1 border-b border-white/5 ${
+                    location.pathname === link.path ? "text-[#e21b70]" : "text-white hover:text-[#e21b70]"
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
-              
-              <div className="w-24 h-px bg-white/20 my-2"></div>
-              
-              <Link
-                to="/admin"
-                onClick={() => setIsMenuOpen(false)}
-                className="text-xl font-medium text-gray-300 hover:text-white"
-              >
-                Admin Panel
-              </Link>
-              <Link
-                to="/login"
-                onClick={() => setIsMenuOpen(false)}
-                className="px-8 py-3 bg-[#e21b70] text-white font-bold rounded-full text-lg w-10/12 text-center"
-              >
-                Login / Sign Up
-              </Link>
+
+              <div className="pt-2 flex flex-col gap-3">
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                      <div className="w-9 h-9 rounded-full bg-[#e21b70] flex items-center justify-center font-bold text-white uppercase">
+                        {user?.name?.[0]}
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">{user?.name}</p>
+                        <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
+                      </div>
+                    </div>
+                    <Link to={getDashboardLink()} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm">
+                      <FaTachometerAlt size={13} /> Dashboard
+                    </Link>
+                    <button onClick={handleLogout} className="flex items-center gap-2 text-red-400 hover:text-red-300 transition text-sm">
+                      <FaSignOutAlt size={13} /> Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="w-full text-center py-3 border border-white/20 text-white rounded-xl hover:bg-white/10 transition font-medium"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="w-full text-center py-3 bg-[#e21b70] text-white rounded-xl hover:bg-pink-600 transition font-bold shadow-lg"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
