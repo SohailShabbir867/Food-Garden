@@ -39,51 +39,54 @@ const HorizontalSlider = () => {
   };
 
   return (
-    <section className="py-24 px-6 sm:px-10 md:px-20 bg-[#1a0009] overflow-hidden">
+    <section className="py-24 bg-white overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
-        className="text-center mb-16"
+        className="text-center mb-16 px-6 sm:px-10 md:px-20"
       >
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-[#3A0519] mb-4">
           Explore Our <span className="text-[#e21b70]">Food Gallery</span>
         </h2>
-        <p className="text-gray-400 max-w-2xl mx-auto text-lg">Swipe through our most popular and mouth-watering items freshly prepared for you.</p>
+        <p className="text-gray-500 max-w-2xl mx-auto text-lg">Swipe through our most popular and mouth-watering items freshly prepared for you.</p>
       </motion.div>
 
-      <div className="overflow-hidden pb-10 relative">
-        {/* Left and Right Gradient Fades for a smoother look */}
-        <div className="absolute top-0 bottom-10 left-0 w-24 bg-gradient-to-r from-[#1a0009] to-transparent z-10 pointer-events-none" />
-        <div className="absolute top-0 bottom-10 right-0 w-24 bg-gradient-to-l from-[#1a0009] to-transparent z-10 pointer-events-none" />
+      <div className="relative mx-auto w-full px-4 sm:px-6 md:px-8">
+        {/* The Track Container */}
+        <div className="overflow-hidden h-80 rounded-full relative shadow-2xl border border-gray-200 max-w-[1800px] mx-auto bg-white">
+          {/* Left and Right Gradient Fades */}
+          <div className="absolute top-0 bottom-0 left-0 w-48 bg-gradient-to-r from-[#1a0009] to-transparent z-10 pointer-events-none" />
+          <div className="absolute top-0 bottom-0 right-0 w-48 bg-gradient-to-l from-[#1a0009] to-transparent z-10 pointer-events-none" />
 
-        <motion.div
-          animate={{ x: [0, "-50%"] }}
-          transition={{ repeat: Infinity, ease: "linear", duration: 35 }}
-          className="flex gap-6 px-4 w-max hover:[animation-play-state:paused]"
-        >
-          {[...sliderItems, ...sliderItems].map((item, index) => (
-            <motion.div
-              key={`${item.id}-${index}`}
-              onClick={handleClick}
-              whileHover={{ scale: 1.05 }}
-              className="min-w-[280px] h-80 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 relative group bg-black/20 cursor-pointer"
-            >
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a0009]/95 via-black/40 to-transparent transition-opacity duration-300 pointer-events-none" />
-              <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
-                <h3 className="text-white text-2xl font-bold tracking-wide transform transition-transform duration-500 group-hover:-translate-y-2 group-hover:text-[#e21b70]">
-                  {item.name}
-                </h3>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+          <motion.div
+            animate={{ x: [0, "-50%"] }}
+            transition={{ repeat: Infinity, ease: "linear", duration: 35 }}
+            className="flex gap-6 w-max hover:[animation-play-state:paused]"
+          >
+            {[...sliderItems, ...sliderItems].map((item, index) => (
+              <motion.div
+                key={`${item.id}-${index}`}
+                onClick={handleClick}
+                whileHover={{ scale: 1.05 }}
+                className="min-w-[280px] h-80 overflow-hidden border border-gray-200 relative group bg-gray-100 cursor-pointer"
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
+                  <h3 className="text-white text-2xl font-bold tracking-wide transform transition-transform duration-500 group-hover:-translate-y-2 group-hover:text-[#e21b70]">
+                    {item.name}
+                  </h3>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
       </div>
     </section>
   );
