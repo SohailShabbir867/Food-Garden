@@ -1,19 +1,19 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 import { toast } from "react-toastify";
-import Cart1 from "../assets/Cart1.jpg";
-import Cart1h from "../assets/Cart1h.jpg";
-import Cart2 from "../assets/Cart2.jpg";
-import Cart2h from "../assets/Cart2h.jpg";
-import Cart3 from "../assets/Cart3.jpg";
-import Cart3h from "../assets/Cart3h.jpg";
-import Cart4 from "../assets/Cart4.jpg";
-import Cart4h from "../assets/Cart4h.jpg";
-import Cart5 from "../assets/Cart5.jpg";
-import Cart5h from "../assets/Cart5h.jpg";
-import Cart6 from "../assets/Cart6.jpg";
-import Cart6h from "../assets/Cart6h.jpg";
+import Cart1 from "../../assets/cart/Cart1.jpg";
+import Cart1h from "../../assets/cart/Cart1h.jpg";
+import Cart2 from "../../assets/cart/Cart2.jpg";
+import Cart2h from "../../assets/cart/Cart2h.jpg";
+import Cart3 from "../../assets/cart/Cart3.jpg";
+import Cart3h from "../../assets/cart/Cart3h.jpg";
+import Cart4 from "../../assets/cart/Cart4.jpg";
+import Cart4h from "../../assets/cart/Cart4h.jpg";
+import Cart5 from "../../assets/cart/Cart5.jpg";
+import Cart5h from "../../assets/cart/Cart5h.jpg";
+import Cart6 from "../../assets/cart/Cart6.jpg";
+import Cart6h from "../../assets/cart/Cart6h.jpg";
 
 // Food items array
 const foods = [

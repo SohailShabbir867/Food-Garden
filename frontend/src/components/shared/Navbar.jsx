@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Navlogo from "../assets/Navlogo.png";
+import Navlogo from "../../assets/logo/Navlogo.png";
 import { FaSearch, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

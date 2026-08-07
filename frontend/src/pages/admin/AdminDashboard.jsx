@@ -1,8 +1,8 @@
-// src/pages/AdminPage.js
+// src/pages/admin/AdminDashboard.jsx
 
 import React, { useState, useEffect } from "react";
 
-const AdminPage = () => {
+const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [product, setProduct] = useState({ name: "", price: "", image: "" });
@@ -142,4 +142,4 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+export default AdminDashboard;

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Typewriter } from 'react-simple-typewriter';
-import Burger from '../assets/Burger.jpg';
-import Piza from '../assets/Piza.jpg';
-import Rools from "../assets/Rools.jpg";
+import Burger from '../../assets/hero/Burger.jpg';
+import Piza from '../../assets/hero/Piza.jpg';
+import Rools from "../../assets/hero/Rools.jpg";
 
 const slides = [
   {

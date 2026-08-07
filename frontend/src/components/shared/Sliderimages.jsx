@@ -3,14 +3,14 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 // Import your 8 images
-import Slider1 from "../assets/Slider1.jpg";
-import Slider2 from "../assets/Slider2.jpg";
-import Slider3 from "../assets/Slider3.jpg";
-import Slider4 from "../assets/Slider4.jpg";
-import Slider5 from "../assets/Slider5.jpg";
-import Slider6 from "../assets/Slider6.jpg";
-import Slider7 from "../assets/Slider7.jpg";
-import Slider8 from "../assets/Slider8.jpg";
+import Slider1 from "../../assets/slider/Slider1.jpg";
+import Slider2 from "../../assets/slider/Slider2.jpg";
+import Slider3 from "../../assets/slider/Slider3.jpg";
+import Slider4 from "../../assets/slider/Slider4.jpg";
+import Slider5 from "../../assets/slider/Slider5.jpg";
+import Slider6 from "../../assets/slider/Slider6.jpg";
+import Slider7 from "../../assets/slider/Slider7.jpg";
+import Slider8 from "../../assets/slider/Slider8.jpg";
 
 const sliderItems = [
   { id: 1, name: "Zinger Burger", image: Slider1 },

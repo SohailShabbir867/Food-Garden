@@ -17,12 +17,14 @@ import Cart from './pages/Cart';
 import Payment from "./pages/Payments";
 
 // Admin Pages
-import AdminPage from "./pages/AdminPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageUsers from "./pages/admin/ManageUsers";
+import ManageVendors from "./pages/admin/ManageVendors";
 
-// (Placeholders for upcoming Vendor pages)
-const VendorDashboardPlaceholder = () => <div className="p-8"><h1 className="text-3xl font-bold">Vendor Dashboard</h1><p className="mt-4">Welcome to your dashboard. Statistics will appear here.</p></div>;
-const VendorMenuPlaceholder = () => <div className="p-8"><h1 className="text-3xl font-bold">Manage Menu</h1><p className="mt-4">Add, edit, or remove your food items.</p></div>;
-const VendorOrdersPlaceholder = () => <div className="p-8"><h1 className="text-3xl font-bold">Orders</h1><p className="mt-4">View and accept incoming orders.</p></div>;
+// Vendor Pages
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorMenu from "./pages/vendor/VendorMenu";
+import VendorOrders from "./pages/vendor/VendorOrders";
 
 function App() {
   return (
@@ -48,9 +50,9 @@ function App() {
         <Route path="/vendor" element={<VendorLayout />}>
           {/* Redirect /vendor to /vendor/dashboard */}
           <Route index element={<Navigate to="/vendor/dashboard" replace />} />
-          <Route path="dashboard" element={<VendorDashboardPlaceholder />} />
-          <Route path="menu" element={<VendorMenuPlaceholder />} />
-          <Route path="orders" element={<VendorOrdersPlaceholder />} />
+          <Route path="dashboard" element={<VendorDashboard />} />
+          <Route path="menu" element={<VendorMenu />} />
+          <Route path="orders" element={<VendorOrders />} />
         </Route>
 
         {/* ======================= */}
@@ -58,10 +60,10 @@ function App() {
         {/* ======================= */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          {/* Reusing existing AdminPage as dashboard for now */}
-          <Route path="dashboard" element={<AdminPage />} />
-          <Route path="users" element={<div className="p-8"><h1 className="text-3xl font-bold">Manage Users</h1></div>} />
-          <Route path="vendors" element={<div className="p-8"><h1 className="text-3xl font-bold">Manage Vendors</h1></div>} />
+          {/* Reusing existing AdminDashboard for now */}
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<ManageUsers />} />
+          <Route path="vendors" element={<ManageVendors />} />
         </Route>
 
       </Routes>
