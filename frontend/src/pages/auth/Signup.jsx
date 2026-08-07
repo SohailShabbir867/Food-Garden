@@ -41,7 +41,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a0009] via-[#3A0519] to-[#1a0009] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a0009] via-[#3A0519] to-[#1a0009] flex items-center justify-center p-4 pt-24 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-[#e21b70] rounded-full filter blur-3xl opacity-10 translate-x-1/3 -translate-y-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-700 rounded-full filter blur-3xl opacity-10 -translate-x-1/3 translate-y-1/3 pointer-events-none" />

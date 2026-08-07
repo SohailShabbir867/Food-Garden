@@ -9,6 +9,7 @@ import { CartProvider } from './context/CartContext';
 
 // ─── Layouts ─────────────────────────────────────────────────
 import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
 import VendorLayout from './layouts/VendorLayout';
 import AdminLayout from './layouts/AdminLayout';
 
@@ -60,12 +61,14 @@ function App() {
           <Routes>
 
             {/* ══════════════════════════════════════════════ */}
-            {/*   AUTH PAGES  (no layout — full-screen)        */}
+            {/*   AUTH PAGES  (Navbar shown, no Footer)        */}
             {/* ══════════════════════════════════════════════ */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-otp" element={<VerifyOTP />} />
+            </Route>
 
             {/* ══════════════════════════════════════════════ */}
             {/*   BUYER / PUBLIC PORTAL  (Navbar + Footer)    */}
