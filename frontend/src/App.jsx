@@ -45,6 +45,7 @@ import ManageOrders from './pages/admin/ManageOrders';
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorMenu from './pages/vendor/VendorMenu';
 import VendorOrders from './pages/vendor/VendorOrders';
+import AddFood from './pages/vendor/AddFood';
 
 // ─── User Pages ──────────────────────────────────────────────
 import UserProfile from './pages/user/Profile';
@@ -123,6 +124,7 @@ function App() {
               <Route index element={<Navigate to="/vendor/dashboard" replace />} />
               <Route path="dashboard" element={<VendorDashboard />} />
               <Route path="menu" element={<VendorMenu />} />
+              <Route path="add-food" element={<AddFood />} />
               <Route path="orders" element={<VendorOrders />} />
             </Route>
 

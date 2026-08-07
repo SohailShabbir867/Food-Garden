@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { FaTachometerAlt, FaUtensils, FaClipboardList, FaSignOutAlt, FaHome } from "react-icons/fa";
+import { FaTachometerAlt, FaUtensils, FaClipboardList, FaSignOutAlt, FaHome, FaPlus } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
@@ -18,6 +18,7 @@ const VendorLayout = () => {
   const navItems = [
     { name: "Dashboard", path: "/vendor/dashboard", icon: <FaTachometerAlt /> },
     { name: "Manage Menu", path: "/vendor/menu", icon: <FaUtensils /> },
+    { name: "Post Food Item", path: "/vendor/add-food", icon: <FaPlus /> },
     { name: "Orders", path: "/vendor/orders", icon: <FaClipboardList /> },
     { name: "Back to Site", path: "/", icon: <FaHome /> },
   ];
