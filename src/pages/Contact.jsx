@@ -1,7 +1,6 @@
 // src/pages/Complaint.js
 
 import React, { useRef, useState } from "react";
-import emailjs from "@emailjs/browser";
 
 const Complaint = () => {
   const formRef = useRef();
@@ -20,22 +19,11 @@ const Complaint = () => {
     e.preventDefault();
     setStatus("Sending...");
 
-    emailjs
-      .sendForm(
-        "your_service_id",      // ✅ Replace with your service ID
-        "your_template_id",     // ✅ Replace with your template ID
-        formRef.current,
-        "your_public_key"       // ✅ Replace with your public key
-      )
-      .then(
-        (result) => {
-          setStatus("Complaint submitted. Please check your email.");
-          setForm({ type: "Product Issue", message: "", user_email: "" });
-        },
-        (error) => {
-          setStatus("Error sending complaint. Try again.");
-        }
-      );
+    // Mock backend submission
+    setTimeout(() => {
+      setStatus("Complaint submitted successfully.");
+      setForm({ type: "Product Issue", message: "", user_email: "" });
+    }, 1500);
   };
 
   return (
@@ -86,7 +74,7 @@ const Complaint = () => {
 
         <button
           type="submit"
-          className="w-full bg-[#e21b70] hover:bg-[#670D2F] text-white py-2 rounded"
+          className="w-full bg-[#e21b70] hover:bg-[#670D2F] text-white py-2 rounded transition-colors"
         >
           Submit Complaint
         </button>

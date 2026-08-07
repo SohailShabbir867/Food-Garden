@@ -12,7 +12,7 @@ import Menu from './pages/Menu';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Cart from './pages/Cart';
-import Payment from "./pages/Payments.js";
+import Payment from "./pages/Payments";
 import AdminPage from "./pages/AdminPage";
 
 
