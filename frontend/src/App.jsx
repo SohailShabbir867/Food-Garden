@@ -29,6 +29,8 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Cart from './pages/Cart';
 import Payment from './pages/Payments';
+import FoodDetail from './pages/FoodDetail';
+import Chat from './pages/Chat';
 
 // ─── Admin Pages ─────────────────────────────────────────────
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -80,6 +82,8 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/payment" element={<Payment />} />
+              <Route path="/food/:id" element={<FoodDetail />} />
+              <Route path="/chat" element={<Chat />} />
 
               {/* Protected buyer routes */}
               <Route

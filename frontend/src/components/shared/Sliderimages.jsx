@@ -13,14 +13,14 @@ import Slider7 from "../../assets/slider/Slider7.jpg";
 import Slider8 from "../../assets/slider/Slider8.jpg";
 
 const sliderItems = [
-  { id: 1, name: "Zinger Burger", image: Slider1 },
-  { id: 2, name: "Pizza Slice", image: Slider2 },
-  { id: 3, name: "French Fries", image: Slider3 },
-  { id: 4, name: "Cold Shake", image: Slider4 },
-  { id: 5, name: "Nuggets", image: Slider5 },
+  { id: 1, name: "Chocolate Cake", image: Slider1 },
+  { id: 2, name: "Fresh Juice", image: Slider2 },
+  { id: 3, name: "Samosas", image: Slider3 },
+  { id: 4, name: "French Fries", image: Slider4 },
+  { id: 5, name: "Pizza Slice", image: Slider5 },
   { id: 6, name: "Loaded Fries", image: Slider6 },
-  { id: 7, name: "Biryani", image: Slider7 },
-  { id: 8, name: "Club Sandwich", image: Slider8 },
+  { id: 7, name: "Slushies", image: Slider7 },
+  { id: 8, name: "Sandwich", image: Slider8 },
 ];
 
 const HorizontalSlider = () => {
@@ -34,8 +34,8 @@ const HorizontalSlider = () => {
     }
   }, []);
 
-  const handleClick = () => {
-    navigate("/menu");
+  const handleClick = (itemName) => {
+    navigate(`/menu?category=${encodeURIComponent(itemName)}`);
   };
 
   return (
@@ -68,7 +68,7 @@ const HorizontalSlider = () => {
             {[...sliderItems, ...sliderItems].map((item, index) => (
               <motion.div
                 key={`${item.id}-${index}`}
-                onClick={handleClick}
+                onClick={() => handleClick(item.name)}
                 whileHover={{ scale: 1.05 }}
                 className="min-w-[280px] h-80 overflow-hidden border border-gray-200 relative group bg-gray-100 cursor-pointer"
               >

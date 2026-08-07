@@ -1,68 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useCart } from "../../context/CartContext";
-import { toast } from "react-toastify";
-import Cart1 from "../../assets/cart/Cart1.jpg";
-import Cart1h from "../../assets/cart/Cart1h.jpg";
-import Cart2 from "../../assets/cart/Cart2.jpg";
-import Cart2h from "../../assets/cart/Cart2h.jpg";
-import Cart3 from "../../assets/cart/Cart3.jpg";
-import Cart3h from "../../assets/cart/Cart3h.jpg";
-import Cart4 from "../../assets/cart/Cart4.jpg";
-import Cart4h from "../../assets/cart/Cart4h.jpg";
-import Cart5 from "../../assets/cart/Cart5.jpg";
-import Cart5h from "../../assets/cart/Cart5h.jpg";
-import Cart6 from "../../assets/cart/Cart6.jpg";
-import Cart6h from "../../assets/cart/Cart6h.jpg";
+import { useNavigate } from "react-router-dom";
+import { FaStar, FaStore, FaArrowRight } from "react-icons/fa";
+import { allFoods } from "../../data/foodData";
 
-// Food items array
-const foods = [
-  {
-    id: 1,
-    name: "Classic Beef Burger",
-    price: 599,
-    image: Cart1,
-    hoverImage: Cart1h,
-  },
-  {
-    id: 2,
-    name: "Cheesy Fries",
-    price: 349,
-    image: Cart2,
-    hoverImage: Cart2h,
-  },
-  {
-    id: 3,
-    name: "Chicken Samosas",
-    price: 449,
-    image: Cart3,
-    hoverImage: Cart3h,
-  },
-  {
-    id: 4,
-    name: "Veggie Delight Pizza",
-    price: 699,
-    image: Cart4,
-    hoverImage: Cart4h,
-  },
-  {
-    id: 5,
-    name: "Spicy Rolls",
-    price: 449,
-    image: Cart5,
-    hoverImage: Cart5h,
-  },
-  {
-    id: 6,
-    name: "Loaded Fries",
-    price: 299,
-    image: Cart6,
-    hoverImage: Cart6h,
-  },
-];
+// NOTE: Images are imported inside foodData.js — no need to re-import them here.
 
 const RecommendedFoods = () => {
-  const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {
@@ -71,9 +16,8 @@ const RecommendedFoods = () => {
       maximumFractionDigits: 0,
     }).format(amount);
 
-  const handleAddToCart = (food) => {
-    addToCart(food);
-    toast.success(`${food.name} added to cart!`);
+  const handleViewDetails = (id) => {
+    navigate(`/food/${id}`);
   };
 
   const containerVariants = {
@@ -81,70 +25,126 @@ const RecommendedFoods = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.15,
+      },
+    },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+    hidden: { opacity: 0, y: 40, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1, 
+      transition: { type: "spring", stiffness: 100, damping: 15 } 
+    },
   };
 
   return (
-    <section className="bg-gray-50 py-20 px-6 sm:px-10 md:px-20">
-      <div className="text-center mb-16">
-        <motion.h2 
+    <section className="bg-gradient-to-b from-white to-gray-50 py-24 px-6 sm:px-10 md:px-20 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-[#e21b70] opacity-5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#3A0519] opacity-5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+
+      <div className="text-center mb-16 relative z-10">
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-4xl md:text-5xl font-extrabold text-[#3A0519] mb-4"
+          transition={{ duration: 0.6 }}
         >
-          Most Recommended Dishes
-        </motion.h2>
-        <div className="w-24 h-1 bg-[#e21b70] mx-auto rounded-full"></div>
+          <span className="text-[#e21b70] font-bold tracking-wider uppercase text-sm mb-2 block">
+            Curated For You
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#3A0519] mb-4">
+            Most Recommended Dishes
+          </h2>
+          <p className="text-gray-500 max-w-2xl mx-auto">
+            Discover the highest-rated meals from our top local vendors, freshly prepared and delivered to your door.
+          </p>
+        </motion.div>
+        <motion.div 
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="w-24 h-1.5 bg-gradient-to-r from-[#e21b70] to-[#3A0519] mx-auto rounded-full mt-6"
+        ></motion.div>
       </div>
 
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10"
+        viewport={{ once: true, margin: "-50px" }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10 max-w-7xl mx-auto"
       >
-        {foods.map((food) => (
+        {allFoods.map((food) => (
           <motion.div
             key={food.id}
             variants={itemVariants}
-            className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group"
+            whileHover={{ y: -8 }}
+            className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:shadow-[0_20px_40px_rgb(226,27,112,0.15)] transition-all duration-300 group border border-gray-100 flex flex-col h-full"
           >
-            <div className="relative w-full h-64 overflow-hidden">
+            {/* Image Container */}
+            <div className="relative w-full h-60 overflow-hidden cursor-pointer">
+              {/* Category Badge */}
+              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[#3A0519] text-xs font-bold py-1.5 px-3 rounded-full shadow-sm z-20">
+                {food.category}
+              </div>
+              
+              {/* Price Badge */}
+              <div className="absolute top-4 right-4 bg-[#e21b70] text-white font-bold py-1.5 px-4 rounded-full shadow-lg z-20 shadow-[#e21b70]/40">
+                {formatPKR(food.basePrice)}
+              </div>
+
               <img
-                src={food.image}
+                src={food.images[0]}
                 alt={food.name}
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-100 group-hover:opacity-0"
               />
               <img
-                src={food.hoverImage}
+                src={food.images[1]}
                 alt={food.name + " hover"}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 transform scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-100"
               />
-              <div className="absolute top-4 right-4 bg-[#e21b70] text-white font-bold py-1 px-3 rounded-full shadow-md z-10">
-                {formatPKR(food.price)}
-              </div>
+              
+              {/* Image Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
             </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold text-[#3A0519] mb-4">
-                {food.name}
-              </h3>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleAddToCart(food)}
-                className="w-full py-3 bg-[#e21b70] text-white rounded-xl font-bold hover:bg-[#3A0519] transition-colors duration-300 shadow-md"
-              >
-                Add to Cart
-              </motion.button>
+
+            {/* Content Container */}
+            <div className="p-6 flex flex-col flex-grow">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-2xl font-bold text-[#3A0519] group-hover:text-[#e21b70] transition-colors duration-300 line-clamp-1">
+                  {food.name}
+                </h3>
+              </div>
+
+              {/* Vendor & Rating Info */}
+              <div className="flex justify-between items-center mb-6 text-sm">
+                <div className="flex items-center text-gray-500 gap-1.5">
+                  <FaStore className="text-gray-400" />
+                  <span className="font-medium truncate max-w-[120px]">{food.vendorName}</span>
+                </div>
+                <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-md">
+                  <FaStar className="text-yellow-400 w-3.5 h-3.5" />
+                  <span className="font-bold text-gray-700">{food.rating}</span>
+                  <span className="text-gray-400 text-xs">({food.reviews})</span>
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleViewDetails(food.id)}
+                  className="w-full py-3.5 bg-gray-50 text-[#3A0519] border border-gray-200 rounded-xl font-bold hover:bg-[#e21b70] hover:text-white hover:border-[#e21b70] transition-all duration-300 shadow-sm flex items-center justify-center gap-2"
+                >
+                  <FaArrowRight />
+                  View Details
+                </motion.button>
+              </div>
             </div>
           </motion.div>
         ))}

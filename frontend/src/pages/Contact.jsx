@@ -1,14 +1,14 @@
-// src/pages/Complaint.js
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane } from "react-icons/fa";
 
-import React, { useRef, useState } from "react";
-
-const Complaint = () => {
-  const formRef = useRef();
+const Contact = () => {
   const [status, setStatus] = useState("");
   const [form, setForm] = useState({
-    type: "Product Issue",
+    name: "",
+    email: "",
+    subject: "Order Support",
     message: "",
-    user_email: "",
   });
 
   const handleChange = (e) => {
@@ -21,70 +21,193 @@ const Complaint = () => {
 
     // Mock backend submission
     setTimeout(() => {
-      setStatus("Complaint submitted successfully.");
-      setForm({ type: "Product Issue", message: "", user_email: "" });
+      setStatus("Message sent successfully! We will get back to you soon.");
+      setForm({ name: "", email: "", subject: "Order Support", message: "" });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setStatus(""), 3000);
     }, 1500);
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-[#e21b70] text-center">Submit a Complaint</h2>
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-        {/* Hidden field to pass complaint type */}
-        <input type="hidden" name="type" value={form.type} />
-
-        <label className="block">
-          <span className="text-[#3A0519] font-medium">Complaint Type</span>
-          <select
-            name="type"
-            value={form.type}
-            onChange={handleChange}
-            className="w-full mt-1 px-3 py-2 border rounded"
+    <div className="min-h-screen bg-gray-50 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        
+        {/* Header Section */}
+        <div className="text-center mb-16">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-extrabold text-[#3A0519] mb-4"
           >
-            <option>Product Issue</option>
-            <option>Delivery Issue</option>
-            <option>Other</option>
-          </select>
-        </label>
+            Get in <span className="text-[#e21b70]">Touch</span>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-gray-600 text-lg max-w-2xl mx-auto"
+          >
+            Whether you have a question about your order, want to partner with us, or just want to say hi, our team is ready to help!
+          </motion.p>
+        </div>
 
-        <label className="block">
-          <span className="text-[#3A0519] font-medium">Your Email</span>
-          <input
-            type="email"
-            name="user_email"
-            required
-            value={form.user_email}
-            onChange={handleChange}
-            className="w-full mt-1 px-3 py-2 border rounded"
-            placeholder="example@email.com"
-          />
-        </label>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          
+          {/* Contact Information Cards */}
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-1 space-y-6"
+          >
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-start gap-4 group hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-[#e21b70] group-hover:scale-110 transition-transform">
+                <FaEnvelope size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#3A0519] mb-1">Email Us</h3>
+                <p className="text-gray-500 text-sm">We're here to help 24/7.</p>
+                <a href="mailto:support@foodgarden.com" className="text-[#e21b70] font-semibold mt-2 inline-block hover:underline">
+                  support@foodgarden.com
+                </a>
+              </div>
+            </div>
 
-        <label className="block">
-          <span className="text-[#3A0519] font-medium">Description</span>
-          <textarea
-            name="message"
-            required
-            value={form.message}
-            onChange={handleChange}
-            className="w-full mt-1 px-3 py-2 border rounded h-28"
-            placeholder="Describe your issue..."
-          />
-        </label>
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-start gap-4 group hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-[#e21b70] group-hover:scale-110 transition-transform">
+                <FaPhone size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#3A0519] mb-1">Call Us</h3>
+                <p className="text-gray-500 text-sm">Mon-Fri from 8am to 5pm.</p>
+                <a href="tel:+923001234567" className="text-[#e21b70] font-semibold mt-2 inline-block hover:underline">
+                  +92 300 1234567
+                </a>
+              </div>
+            </div>
 
-        <button
-          type="submit"
-          className="w-full bg-[#e21b70] hover:bg-[#670D2F] text-white py-2 rounded transition-colors"
-        >
-          Submit Complaint
-        </button>
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-start gap-4 group hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-[#e21b70] group-hover:scale-110 transition-transform">
+                <FaMapMarkerAlt size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#3A0519] mb-1">Our HQ</h3>
+                <p className="text-gray-500 text-sm">Come say hello at our office.</p>
+                <p className="text-[#e21b70] font-semibold mt-2">
+                  123 Food Street, Karachi, Pakistan
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
-        {status && (
-          <p className="text-center mt-4 text-sm text-green-600">{status}</p>
-        )}
-      </form>
+          {/* Contact Form */}
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-2 bg-white rounded-3xl shadow-xl shadow-[#e21b70]/5 border border-gray-100 p-8 sm:p-12 relative overflow-hidden"
+          >
+            {/* Decorative blob */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-60"></div>
+            
+            <h2 className="text-3xl font-bold text-[#3A0519] mb-8 relative z-10">Send us a Message</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Name */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={form.name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e21b70]/50 focus:border-[#e21b70] transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
+                
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={form.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e21b70]/50 focus:border-[#e21b70] transition-all"
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">How can we help?</label>
+                <select
+                  name="subject"
+                  value={form.subject}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e21b70]/50 focus:border-[#e21b70] transition-all text-gray-700 cursor-pointer"
+                >
+                  <option>Order Support</option>
+                  <option>Vendor Inquiry</option>
+                  <option>Partnership & Business</option>
+                  <option>General Feedback</option>
+                </select>
+              </div>
+
+              {/* Message */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Your Message</label>
+                <textarea
+                  name="message"
+                  required
+                  value={form.message}
+                  onChange={handleChange}
+                  rows="5"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e21b70]/50 focus:border-[#e21b70] transition-all resize-none"
+                  placeholder="Tell us everything..."
+                />
+              </div>
+
+              {/* Submit Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={status === "Sending..."}
+                className="w-full sm:w-auto px-8 py-4 bg-[#e21b70] text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-[#e21b70]/30 hover:bg-[#c01560] transition-colors disabled:opacity-70"
+              >
+                {status === "Sending..." ? (
+                  <span className="animate-pulse">Sending...</span>
+                ) : (
+                  <>
+                    Send Message <FaPaperPlane className="text-sm" />
+                  </>
+                )}
+              </motion.button>
+
+              {/* Status Message */}
+              {status && status !== "Sending..." && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-semibold"
+                >
+                  {status}
+                </motion.div>
+              )}
+            </form>
+          </motion.div>
+
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Complaint;
+export default Contact;

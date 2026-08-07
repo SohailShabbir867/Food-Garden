@@ -12,17 +12,17 @@ const slides = [
   {
     image: Burger,
     keyword: 'Burgers',
-    subtitle: ['JUICY PATTY', 'FRESH LETTUCE', 'CRISPY FRIES'],
+    subtitle: ['LOCAL RESTAURANTS', 'FAST DELIVERY', 'SECURE PAYMENT'],
   },
   {
     image: Piza,
     keyword: 'Pizza',
-    subtitle: ['WOOD-FIRED', 'FRESH TOPPINGS', 'CHEESY CRUST'],
+    subtitle: ['HOME CHEFS', 'HOT & FRESH', 'EASY ORDERING'],
   },
   {
     image: Rools,
     keyword: 'Rolls',
-    subtitle: ['CRISPY OUTSIDE', 'SPICY FILLING', 'FRESH SAUCE'],
+    subtitle: ['DIRECT CHAT', 'MULTIPLE VENDORS', 'GREAT DEALS'],
   },
 ];
 
@@ -85,7 +85,7 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white leading-tight max-w-4xl"
           >
-            Savor the Ultimate{' '}
+            Order the Best Local{' '}
             <span className="text-[#e21b70] italic font-extrabold">
               <Typewriter
                 key={current}
@@ -97,7 +97,7 @@ const HeroSection = () => {
                 deleteSpeed={50}
               />
             </span>{' '}
-            Experience
+            From Any Vendor
           </motion.h1>
 
           {/* Bullet pills */}

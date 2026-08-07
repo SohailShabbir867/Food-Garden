@@ -1,31 +1,31 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { FaShippingFast, FaLeaf, FaClock, FaAward } from "react-icons/fa";
+import { FaShippingFast, FaUtensils, FaComments, FaShieldAlt } from "react-icons/fa";
 
 const features = [
   {
     id: 1,
     icon: <FaShippingFast size={40} />,
     title: "Fast Delivery",
-    description: "Hot and fresh food delivered to your doorstep within 30 minutes.",
+    description: "Get your favorite meals delivered straight to your doorstep quickly and reliably.",
   },
   {
     id: 2,
-    icon: <FaLeaf size={40} />,
-    title: "Fresh Ingredients",
-    description: "We use only the freshest organic ingredients from local farms.",
+    icon: <FaUtensils size={40} />,
+    title: "Endless Choices",
+    description: "Browse diverse menus from top local restaurants and talented home-based cooks.",
   },
   {
     id: 3,
-    icon: <FaClock size={40} />,
-    title: "24/7 Service",
-    description: "Craving a midnight snack? We are open 24/7 to serve you.",
+    icon: <FaComments size={40} />,
+    title: "Direct Chat",
+    description: "Message sellers directly in real-time to customize orders or coordinate pickup.",
   },
   {
     id: 4,
-    icon: <FaAward size={40} />,
-    title: "Premium Quality",
-    description: "Award-winning chefs crafting unforgettable culinary experiences.",
+    icon: <FaShieldAlt size={40} />,
+    title: "Trusted Platform",
+    description: "A secure, admin-moderated marketplace ensuring safety, quality, and seamless checkout.",
   },
 ];
 
