@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Typewriter } from 'react-simple-typewriter';
 import Burger from '../assets/Burger.jpg';
 import Piza from '../assets/Piza.jpg';
 import Rools from "../assets/Rools.jpg";
@@ -8,7 +9,7 @@ import Rools from "../assets/Rools.jpg";
 const slides = [
   {
     image: Burger,
-    title: 'Delicious Burger',
+    title: 'Delicious Burgers',
     text: 'Try our juicy, flame-grilled burgers made fresh to order!',
   },
   {
@@ -19,7 +20,7 @@ const slides = [
   {
     image: Rools,
     title: 'Spicy Rolls',
-    text: 'Chicken Rolls Fully Loaded With Cheese',
+    text: 'Chicken Rolls fully loaded with cheese & spices.',
   },
 ];
 
@@ -56,33 +57,57 @@ const Carousel = () => {
             className="w-full h-full object-cover"
           />
           
-          <div className="absolute inset-0 bg-gradient-to-t from-[#3A0519] via-black/50 to-transparent flex items-center justify-center">
-            <div className="text-center text-white max-w-2xl px-6">
-              <motion.h2 
-                initial={{ y: 30, opacity: 0 }}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#3A0519] via-black/60 to-transparent flex items-center justify-center">
+            <div className="text-center text-white max-w-3xl px-6">
+              
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-                className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-4 drop-shadow-lg tracking-tight"
+                transition={{ delay: 0.2, duration: 0.8 }}
+                className="mb-4 text-xl sm:text-2xl text-gray-300 font-semibold tracking-widest uppercase"
               >
-                {slides[current].title}
-              </motion.h2>
+                Welcome to Food Garden
+              </motion.div>
+
+              <div className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 drop-shadow-lg tracking-tight min-h-[80px]">
+                We serve{' '}
+                <span className="text-[#e21b70]">
+                  <Typewriter
+                    key={current}
+                    words={[slides[current].title]}
+                    loop={1}
+                    cursor
+                    cursorStyle='|'
+                    typeSpeed={70}
+                    deleteSpeed={50}
+                    delaySpeed={1000}
+                  />
+                </span>
+              </div>
+
               <motion.p 
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-lg sm:text-xl md:text-2xl drop-shadow-md mb-8 text-gray-200"
+                className="text-lg sm:text-xl md:text-2xl drop-shadow-md mb-8 text-gray-200 max-w-2xl mx-auto"
               >
                 {slides[current].text}
               </motion.p>
+
               <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.7, duration: 0.8 }}
+                className="flex gap-4 justify-center"
               >
                 <Link to="/menu" className="inline-block px-8 py-4 bg-[#e21b70] hover:bg-white hover:text-[#e21b70] transition-colors duration-300 text-white rounded-full font-bold text-lg shadow-lg">
                   Order Now
                 </Link>
+                <Link to="/about" className="inline-block px-8 py-4 bg-transparent border-2 border-white hover:bg-white hover:text-[#3A0519] transition-colors duration-300 text-white rounded-full font-bold text-lg shadow-lg">
+                  Explore
+                </Link>
               </motion.div>
+
             </div>
           </div>
         </motion.div>
