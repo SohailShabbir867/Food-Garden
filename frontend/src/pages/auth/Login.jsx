@@ -58,12 +58,6 @@ const Login = () => {
             <h1 className="text-4xl font-extrabold text-white leading-tight">
               Sign in to your account
             </h1>
-            <p className="text-gray-500 mt-2 text-sm">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-[#e21b70] font-semibold hover:underline">
-                Create one free
-              </Link>
-            </p>
           </div>
 
 
@@ -89,11 +83,8 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <div className="flex justify-between items-center mb-1.5">
+              <div className="mb-1.5">
                 <label className="text-gray-400 text-xs font-medium uppercase tracking-wider">Password</label>
-                <Link to="/forgot-password" className="text-xs text-[#e21b70] hover:underline">
-                  Forgot Password?
-                </Link>
               </div>
               <div className="relative">
                 <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
@@ -131,20 +122,25 @@ const Login = () => {
             </motion.button>
           </form>
 
-          {/* Admin shortcut */}
-          <p className="text-center text-gray-700 text-xs mt-6">
-            Platform admin?{" "}
-            <Link to="/admin/dashboard" className="text-gray-500 hover:text-gray-300 underline transition">
-              Admin Login
+          <div className="flex flex-col items-center gap-3 mt-6">
+            <Link to="/forgot-password" className="text-sm text-[#e21b70] font-semibold hover:underline transition">
+              Forgot Password?
             </Link>
-          </p>
+            <p className="text-gray-400 text-sm">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-white font-semibold hover:text-[#e21b70] transition">
+                Sign Up
+              </Link>
+            </p>
+          </div>
         </motion.div>
       </div>
 
       {/* ─────────────────────────────────── */}
-      {/*  RIGHT — Image Panel (hidden mobile) */}
+      {/*  RIGHT — Image Panel                */}
       {/* ─────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative py-4 lg:py-8 lg:pl-4">
+        <div className="relative w-full h-full rounded-l-[3.5rem] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border-y border-l border-white/5">
         {/* Static image */}
         <img
           src={SliderImage}
@@ -196,6 +192,7 @@ const Login = () => {
               <p className="text-gray-400 text-xs mt-1.5">— Ayesha K., Loyal Customer</p>
             </div>
           </motion.div>
+        </div>
         </div>
       </div>
 

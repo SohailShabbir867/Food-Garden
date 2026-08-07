@@ -60,12 +60,6 @@ const Signup = () => {
             <h1 className="text-4xl font-extrabold text-white leading-tight">
               Create your account
             </h1>
-            <p className="text-gray-500 mt-2 text-sm">
-              Already registered?{" "}
-              <Link to="/login" className="text-[#e21b70] font-semibold hover:underline">
-                Sign in
-              </Link>
-            </p>
           </div>
 
 
@@ -181,17 +175,26 @@ const Signup = () => {
             </motion.button>
           </form>
 
-          <p className="text-gray-700 text-xs text-center mt-5">
-            By signing up, you agree to our{" "}
-            <a href="#" className="text-gray-500 hover:text-[#e21b70] transition underline">Terms of Service</a>
-          </p>
+          <div className="flex flex-col items-center gap-3 mt-5">
+            <p className="text-gray-400 text-sm">
+              Already registered?{" "}
+              <Link to="/login" className="text-white font-semibold hover:text-[#e21b70] transition">
+                Sign In
+              </Link>
+            </p>
+            <p className="text-gray-700 text-xs text-center">
+              By signing up, you agree to our{" "}
+              <a href="#" className="text-gray-500 hover:text-[#e21b70] transition underline">Terms of Service</a>
+            </p>
+          </div>
         </motion.div>
       </div>
 
       {/* ─────────────────────────────────── */}
       {/*  RIGHT — Image Panel                */}
       {/* ─────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative py-4 lg:py-8 lg:pl-4">
+        <div className="relative w-full h-full rounded-l-[3.5rem] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border-y border-l border-white/5">
         {/* Static image */}
         <img
           src={SliderImage}
@@ -243,6 +246,7 @@ const Signup = () => {
               </div>
             ))}
           </div>
+        </div>
         </div>
       </div>
 

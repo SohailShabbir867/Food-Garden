@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaEnvelope, FaArrowRight } from "react-icons/fa";
 import { toast } from "react-toastify";
+import BgImage from "../../assets/hero/Burger.jpg";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -19,8 +20,11 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a0009] via-[#3A0519] to-[#1a0009] flex items-center justify-center p-4 pt-24 relative overflow-hidden">
-      <div className="absolute top-1/4 left-0 w-72 h-72 bg-[#e21b70] rounded-full filter blur-3xl opacity-10 -translate-x-1/2 pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center p-4 pt-24 relative overflow-hidden bg-[#1a0009]">
+      {/* Background Image & Overlay */}
+      <img src={BgImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a0009]/95 via-[#1a0009]/80 to-black/90" />
+      <div className="absolute top-1/4 left-0 w-72 h-72 bg-[#e21b70] rounded-full filter blur-[100px] opacity-30 -translate-x-1/2 pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 40 }}
