@@ -9,16 +9,7 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
-  // Load from localStorage
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("cartItems")) || [];
-    setCartItems(stored);
-  }, []);
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-  }, [cartItems]);
 
   // ✅ Add to Cart
   const addToCart = (item) => {

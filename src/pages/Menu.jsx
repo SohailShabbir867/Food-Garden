@@ -4,13 +4,13 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 
 const Menu = () => {
-  const [menuItems, setMenuItems] = useState([]);
-  const { addToCart } = useCart(); // ✅ Access cart context
-
-  useEffect(() => {
-    const storedItems = JSON.parse(localStorage.getItem("menuItems")) || [];
-    setMenuItems(storedItems);
-  }, []);
+  const mockMenu = [
+    { id: 1, name: "Delicious Burger", price: 800, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80" },
+    { id: 2, name: "Fresh Pizza", price: 1500, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80" },
+    { id: 3, name: "Spicy Wraps", price: 600, image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=500&q=80" }
+  ];
+  const [menuItems, setMenuItems] = useState(mockMenu);
+  const { addToCart } = useCart();
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {

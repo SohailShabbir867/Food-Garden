@@ -11,8 +11,7 @@ const AdminPage = () => {
   const adminKey = "SohailShabbir25598@";
 
   useEffect(() => {
-    const storedProducts = JSON.parse(localStorage.getItem("menuItems")) || [];
-    setMenuItems(storedProducts);
+    // Will fetch from backend later
   }, []);
 
   const handlePasswordSubmit = (e) => {
@@ -34,7 +33,6 @@ const AdminPage = () => {
     const newProduct = { ...product, id: Date.now() };
 
     const updatedProducts = [...menuItems, newProduct];
-    localStorage.setItem("menuItems", JSON.stringify(updatedProducts));
     setMenuItems(updatedProducts);
 
     alert("Product Added!");
@@ -43,7 +41,6 @@ const AdminPage = () => {
 
   const handleDeleteProduct = (id) => {
     const updatedProducts = menuItems.filter((item) => item.id !== id);
-    localStorage.setItem("menuItems", JSON.stringify(updatedProducts));
     setMenuItems(updatedProducts);
   };
 
