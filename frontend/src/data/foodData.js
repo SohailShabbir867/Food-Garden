@@ -173,3 +173,12 @@ export const allFoods = [
     tags: ["Popular", "Filling", "Halal"],
   },
 ];
+
+export const categories = [
+  { id: 1, name: "Fast Food", icon: "🍔" },
+  { id: 2, name: "Pizza", icon: "🍕" },
+  { id: 3, name: "Desi", icon: "🍲" },
+  { id: 4, name: "Snacks", icon: "🍟" },
+  { id: 5, name: "Drinks", icon: "🥤" },
+];
+

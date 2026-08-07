@@ -35,9 +35,8 @@ const Cart = () => {
   // Delivery fee rules: Free if subtotal > 1500, else 150 PKR
   const freeDeliveryThreshold = 1500;
   const deliveryFee = subtotal >= freeDeliveryThreshold || subtotal === 0 ? 0 : 150;
-  const tax = Math.round(subtotal * 0.05); // 5% tax
   const discountAmount = Math.round((subtotal * discount) / 100);
-  const grandTotal = Math.max(0, subtotal + deliveryFee + tax - discountAmount);
+  const grandTotal = Math.max(0, subtotal + deliveryFee - discountAmount);
 
   const deliveryProgress = Math.min(100, (subtotal / freeDeliveryThreshold) * 100);
 
@@ -283,11 +282,6 @@ const Cart = () => {
                         formatPKR(deliveryFee)
                       )}
                     </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span>Estimated Tax (5%)</span>
-                    <span className="font-bold text-gray-800">{formatPKR(tax)}</span>
                   </div>
 
                   {discountAmount > 0 && (
