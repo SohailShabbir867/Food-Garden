@@ -7,6 +7,9 @@ import Footer from './components/Footer';
 
 
 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Home from './pages/Home';
 import Menu from './pages/Menu';
 import About from './pages/About';
@@ -20,6 +23,7 @@ function App() {
   return (
 
     <Router>
+      <ToastContainer position="bottom-right" autoClose={3000} theme="colored" />
       <div className="flex flex-col min-h-screen">
         <Navbar />
 

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 // Import your 8 images
@@ -24,32 +25,64 @@ const sliderItems = [
 
 const HorizontalSlider = () => {
   const navigate = useNavigate();
+  const carouselRef = useRef();
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (carouselRef.current) {
+      setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+    }
+  }, []);
 
   const handleClick = () => {
     navigate("/menu");
   };
 
   return (
-    <section className="py-12 px-6 sm:px-10 md:px-20 bg-[#fff4f8]">
-      <h2 className="text-3xl font-bold text-[#3A0519] mb-6 text-center">
-        Explore Our Food Gallery
-      </h2>
+    <section className="py-16 px-6 sm:px-10 md:px-20 bg-white overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="text-center mb-12"
+      >
+        <h2 className="text-4xl md:text-5xl font-bold text-[#3A0519] mb-4">
+          Explore Our Food Gallery
+        </h2>
+        <p className="text-gray-500 max-w-2xl mx-auto text-lg">Swipe through our most popular and mouth-watering items freshly prepared for you.</p>
+      </motion.div>
 
-      <div className="flex gap-6 overflow-x-auto scrollbar-hide">
-        {sliderItems.map((item) => (
-          <div
-            key={item.id}
-            onClick={handleClick}
-            className="min-w-[250px] h-72 rounded-xl overflow-hidden shadow-lg cursor-pointer transform hover:scale-105 transition"
-          >
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
-      </div>
+      <motion.div ref={carouselRef} className="cursor-grab overflow-hidden">
+        <motion.div
+          drag="x"
+          dragConstraints={{ right: 0, left: -width }}
+          whileTap={{ cursor: "grabbing" }}
+          className="flex gap-6 px-4"
+        >
+          {sliderItems.map((item, index) => (
+            <motion.div
+              key={item.id}
+              onClick={handleClick}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+              whileHover={{ scale: 1.05 }}
+              className="min-w-[280px] h-80 rounded-2xl overflow-hidden shadow-xl relative group"
+            >
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6 pointer-events-none">
+                <h3 className="text-white text-2xl font-bold">{item.name}</h3>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.div>
     </section>
   );
 };
