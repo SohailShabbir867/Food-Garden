@@ -44,7 +44,7 @@ const Navbar = () => {
             whileHover={{ rotate: 10, scale: 1.1 }}
             src={Navlogo}
             alt="Food Garden Logo"
-            className="w-12 h-12 object-contain mix-blend-screen"
+            className="w-12 h-12 object-cover rounded-full shadow-lg border-2 border-white/20"
           />
           <span className="text-2xl sm:text-3xl font-extrabold tracking-wide text-[#e21b70] transition-colors group-hover:text-white">
             Food<span className="text-white group-hover:text-[#e21b70]">Garden</span>

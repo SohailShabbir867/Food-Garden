@@ -3,7 +3,10 @@
 import React from "react";
 import HeroSection from "../components/HeroSection";
 import CartItms from "../components/CartItems"
-import Sliderimage from "../components/Sliderimages"
+import Sliderimage from "../components/Sliderimages";
+import FeaturesSection from "../components/FeaturesSection";
+import TestimonialsSection from "../components/TestimonialsSection";
+import FAQSection from "../components/FAQSection";
 
 
 const Home = () => {
@@ -11,8 +14,10 @@ const Home = () => {
     <>
       <HeroSection />
       <Sliderimage/>
+      <FeaturesSection />
       <CartItms/>
-      {/* You can add more sections here like FeaturedMenu, Categories, etc. */}
+      <TestimonialsSection />
+      <FAQSection />
     </>
   );
 };
