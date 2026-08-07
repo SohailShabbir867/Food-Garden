@@ -32,6 +32,7 @@ import Payment from './pages/Payments';
 import FoodDetail from './pages/FoodDetail';
 import Chat from './pages/Chat';
 import MyOrders from './pages/MyOrders';
+import TrackOrder from './pages/TrackOrder';
 
 // ─── Admin Pages ─────────────────────────────────────────────
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -86,7 +87,8 @@ function App() {
               <Route path="/food/:id" element={<FoodDetail />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/my-orders" element={<MyOrders />} />
-              <Route path="/orders" element={<MyOrders />} />
+              <Route path="/orders" element={<TrackOrder />} />
+              <Route path="/track-order" element={<TrackOrder />} />
 
               {/* Protected buyer routes */}
               <Route

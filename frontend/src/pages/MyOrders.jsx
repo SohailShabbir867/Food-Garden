@@ -238,13 +238,12 @@ const MyOrders = () => {
 
                   <div className="flex items-center gap-3">
                     {getStatusBadge(order.status)}
-                    <button
-                      type="button"
-                      onClick={() => setActiveTrackingOrder(order)}
-                      className="text-xs font-bold text-[#e21b70] hover:underline flex items-center gap-1 cursor-pointer"
+                    <Link
+                      to={`/orders?id=${order.id}`}
+                      className="text-xs font-extrabold text-[#e21b70] hover:underline flex items-center gap-1 cursor-pointer bg-pink-50 hover:bg-pink-100 px-3 py-1 rounded-full border border-pink-200 transition"
                     >
-                      Track Order <FaChevronRight size={10} />
-                    </button>
+                      Track Live <FaChevronRight size={10} />
+                    </Link>
                   </div>
                 </div>
 
