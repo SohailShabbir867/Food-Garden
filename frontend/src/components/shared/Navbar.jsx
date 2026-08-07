@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navlogo from "../../assets/logo/Navlogo.png";
 import {
   FaSearch, FaShoppingCart, FaBars, FaTimes,
-  FaUser, FaSignOutAlt, FaChevronDown, FaTachometerAlt, FaUtensils
+  FaUser, FaSignOutAlt, FaChevronDown, FaTachometerAlt, FaUtensils, FaShoppingBag
 } from "react-icons/fa";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -206,6 +206,9 @@ const Navbar = () => {
                       <div className="py-2">
                         <Link to={getDashboardLink()} onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
                           <FaTachometerAlt size={12} /> Dashboard
+                        </Link>
+                        <Link to="/my-orders" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
+                          <FaShoppingBag size={12} /> My Orders
                         </Link>
                         <Link to="/user/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
                           <FaUser size={12} /> Profile
