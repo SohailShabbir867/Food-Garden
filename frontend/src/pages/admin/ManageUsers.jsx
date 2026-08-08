@@ -62,7 +62,7 @@ const ManageUsers = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div data-aos="fade-up">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
           <FaUserShield className="text-[#e21b70]" /> User Management
         </h1>
@@ -70,7 +70,7 @@ const ManageUsers = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div data-aos="fade-up" data-aos-delay="100" className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-96">
           <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
           <input
@@ -96,7 +96,7 @@ const ManageUsers = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div data-aos="fade-up" data-aos-delay="150" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-black tracking-wider border-b border-gray-100">

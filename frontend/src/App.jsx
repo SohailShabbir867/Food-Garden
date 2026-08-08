@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 // ─── Providers ───────────────────────────────────────────────
 import { AuthProvider } from './context/AuthContext';
@@ -56,6 +58,16 @@ import VendorProfile from './pages/vendor/VendorProfile';
 import UserProfile from './pages/user/Profile';
 
 function App() {
+  // Initialize AOS (scroll-reveal animations) once, app-wide
+  useEffect(() => {
+    AOS.init({
+      duration: 700,
+      once: true,
+      offset: 60,
+      easing: "ease-out-cubic",
+    });
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>

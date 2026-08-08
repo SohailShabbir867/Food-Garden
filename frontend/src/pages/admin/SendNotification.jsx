@@ -34,14 +34,14 @@ const SendNotification = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div>
+      <div data-aos="fade-up">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
           <FaBell className="text-[#e21b70]" /> Broadcast Notification
         </h1>
         <p className="text-gray-500 text-sm mt-1">Send important updates, policy changes, or alerts to users and vendors.</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+      <div data-aos="fade-up" data-aos-delay="100" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
         <form onSubmit={handleSend} className="space-y-8">
           
           {/* Target Audience */}

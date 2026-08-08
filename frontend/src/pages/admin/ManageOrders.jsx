@@ -2,7 +2,7 @@ import React from 'react';
 
 const ManageOrders = () => {
   return (
-    <div className="min-h-screen p-8 bg-gray-100">
+    <div className="min-h-screen p-8 bg-gray-100" data-aos="fade-up">
       <h1 className="text-2xl font-bold text-[#3A0519]">Manage Orders</h1>
     </div>
   );

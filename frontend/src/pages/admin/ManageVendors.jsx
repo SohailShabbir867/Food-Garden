@@ -1,7 +1,7 @@
 import React from "react";
 
 const ManageVendors = () => (
-  <div className="p-8">
+  <div className="p-8" data-aos="fade-up">
     <h1 className="text-3xl font-bold">Manage Vendors</h1>
   </div>
 );

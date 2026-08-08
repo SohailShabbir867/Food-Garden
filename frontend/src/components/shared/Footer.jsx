@@ -13,7 +13,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-4" data-aos="fade-up">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-[#e21b70] flex items-center justify-center">
                 <FaUtensils className="text-white" />
@@ -44,7 +44,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div data-aos="fade-up" data-aos-delay="100">
             <h4 className="text-white font-bold text-base mb-5">Quick Links</h4>
             <ul className="space-y-3">
               {[
@@ -67,7 +67,7 @@ const Footer = () => {
           </div>
 
           {/* For Business */}
-          <div>
+          <div data-aos="fade-up" data-aos-delay="150">
             <h4 className="text-white font-bold text-base mb-5">For Business</h4>
             <ul className="space-y-3">
               {[
@@ -89,7 +89,7 @@ const Footer = () => {
           </div>
 
           {/* Contact */}
-          <div>
+          <div data-aos="fade-up" data-aos-delay="200">
             <h4 className="text-white font-bold text-base mb-5">Contact Us</h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm text-gray-500">

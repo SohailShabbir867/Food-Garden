@@ -36,7 +36,7 @@ const ManageContacts = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div data-aos="fade-up">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
           <FaEnvelope className="text-[#e21b70]" /> Contact Messages
         </h1>
@@ -46,7 +46,7 @@ const ManageContacts = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         
         {/* Inbox List */}
-        <div className="w-full lg:w-1/3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-[600px]">
+        <div data-aos="fade-right" data-aos-delay="100" className="w-full lg:w-1/3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-[600px]">
           <div className="p-4 border-b border-gray-100 bg-gray-50/50">
             <div className="relative">
               <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
@@ -94,7 +94,7 @@ const ManageContacts = () => {
         </div>
 
         {/* Message Detail & Reply */}
-        <div className="w-full lg:w-2/3 bg-white rounded-2xl shadow-sm border border-gray-100 h-[600px] flex flex-col overflow-hidden">
+        <div data-aos="fade-left" data-aos-delay="150" className="w-full lg:w-2/3 bg-white rounded-2xl shadow-sm border border-gray-100 h-[600px] flex flex-col overflow-hidden">
           {selectedMessage ? (
             <>
               {/* Message Header */}
