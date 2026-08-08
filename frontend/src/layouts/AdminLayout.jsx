@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { FaTachometerAlt, FaUsers, FaStore, FaSignOutAlt, FaHome, FaUtensils, FaClipboardList, FaUser, FaFlag, FaBars } from "react-icons/fa";
+import { FaTachometerAlt, FaUsers, FaStore, FaSignOutAlt, FaHome, FaUtensils, FaClipboardList, FaUser, FaFlag, FaBars, FaEnvelope, FaBell } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
@@ -25,6 +25,8 @@ const AdminLayout = () => {
     { name: "Manage Foods",   path: "/admin/foods",     icon: <FaUtensils size={18} /> },
     { name: "Manage Orders",  path: "/admin/orders",    icon: <FaClipboardList size={18} /> },
     { name: "Reports",        path: "/admin/reports",   icon: <FaFlag size={18} /> },
+    { name: "Messages",       path: "/admin/contacts",  icon: <FaEnvelope size={18} /> },
+    { name: "Notifications",  path: "/admin/notifications", icon: <FaBell size={18} /> },
     { name: "Profile",        path: "/admin/profile",   icon: <FaUser size={18} /> },
   ];
 

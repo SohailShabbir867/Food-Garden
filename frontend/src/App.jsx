@@ -42,6 +42,8 @@ import ManageFoods from './pages/admin/ManageFoods';
 import ManageOrders from './pages/admin/ManageOrders';
 import AdminProfile from './pages/admin/AdminProfile';
 import ManageReports from './pages/admin/ManageReports';
+import ManageContacts from './pages/admin/ManageContacts';
+import SendNotification from './pages/admin/SendNotification';
 
 // ─── Vendor Pages ────────────────────────────────────────────
 import VendorDashboard from './pages/vendor/VendorDashboard';
@@ -150,6 +152,8 @@ function App() {
               <Route path="foods" element={<ManageFoods />} />
               <Route path="orders" element={<ManageOrders />} />
               <Route path="reports" element={<ManageReports />} />
+              <Route path="contacts" element={<ManageContacts />} />
+              <Route path="notifications" element={<SendNotification />} />
               <Route path="profile" element={<AdminProfile />} />
             </Route>
 
