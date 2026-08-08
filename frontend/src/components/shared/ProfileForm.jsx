@@ -61,9 +61,9 @@ const ProfileForm = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden mt-2 mb-12">
+    <div className="max-w-3xl mx-auto bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden mt-2 mb-12">
       {/* Cover Photo Area */}
-      <div className="h-48 sm:h-56 bg-gradient-to-r from-primary via-[#c2155d] to-accent relative overflow-hidden">
+      <div className="h-32 sm:h-40 bg-gradient-to-r from-primary via-[#c2155d] to-accent relative overflow-hidden">
         {/* Abstract shapes */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white blur-3xl"></div>
@@ -73,10 +73,10 @@ const ProfileForm = () => {
       
       {/* Profile Header (Avatar overlapping) */}
       <div className="px-8 sm:px-12 relative pb-8 border-b border-gray-100 bg-white">
-        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-20 sm:-mt-24 relative z-10">
+        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 sm:-mt-20 relative z-10">
           <div className="relative group">
             <div className="relative">
-              <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-[6px] border-white shadow-xl bg-white relative">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-[6px] border-white shadow-xl bg-white relative">
                 <img 
                   src={formData.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=1a0009&color=fff`} 
                   alt="Profile" 
@@ -103,7 +103,7 @@ const ProfileForm = () => {
             />
           </div>
           <div className="text-center sm:text-left mt-2 sm:mt-0 pb-3">
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">{user.name}</h2>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">{user.name}</h2>
             <div className="inline-block mt-3 px-5 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest border border-primary/20 shadow-sm">
               {user.role} Account
             </div>
@@ -112,7 +112,7 @@ const ProfileForm = () => {
       </div>
 
       {/* Form Area */}
-      <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-8 bg-gray-50/50">
+      <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8 bg-gray-50/50">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
           
           {/* Name */}
