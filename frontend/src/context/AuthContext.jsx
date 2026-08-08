@@ -119,6 +119,27 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("food_garden_user");
   };
 
+  const updateProfile = (updatedData) => {
+    if (!user) return { success: false, message: "No user logged in." };
+    
+    const newUserState = { ...user, ...updatedData };
+    setUser(newUserState);
+    
+    // Also try to update the "registered users" array if the user exists there
+    try {
+      const registeredUsers = JSON.parse(localStorage.getItem("food_garden_registered_users") || "[]");
+      const userIndex = registeredUsers.findIndex(u => u.email === user.email);
+      if (userIndex !== -1) {
+        registeredUsers[userIndex] = { ...registeredUsers[userIndex], ...updatedData };
+        localStorage.setItem("food_garden_registered_users", JSON.stringify(registeredUsers));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    
+    return { success: true, message: "Profile updated successfully." };
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === "admin";
   const isVendor = user?.role === "vendor";
@@ -131,6 +152,7 @@ export const AuthProvider = ({ children }) => {
         login,
         loginAsDemoRole,
         logout,
+        updateProfile,
         isAuthenticated,
         isAdmin,
         isVendor,

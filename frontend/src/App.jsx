@@ -40,12 +40,14 @@ import ManageUsers from './pages/admin/ManageUsers';
 import ManageVendors from './pages/admin/ManageVendors';
 import ManageFoods from './pages/admin/ManageFoods';
 import ManageOrders from './pages/admin/ManageOrders';
+import AdminProfile from './pages/admin/AdminProfile';
 
 // ─── Vendor Pages ────────────────────────────────────────────
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorMenu from './pages/vendor/VendorMenu';
 import VendorOrders from './pages/vendor/VendorOrders';
 import AddFood from './pages/vendor/AddFood';
+import VendorProfile from './pages/vendor/VendorProfile';
 
 // ─── User Pages ──────────────────────────────────────────────
 import UserProfile from './pages/user/Profile';
@@ -126,6 +128,7 @@ function App() {
               <Route path="menu" element={<VendorMenu />} />
               <Route path="add-food" element={<AddFood />} />
               <Route path="orders" element={<VendorOrders />} />
+              <Route path="profile" element={<VendorProfile />} />
             </Route>
 
             {/* ══════════════════════════════════════════════ */}
@@ -145,6 +148,7 @@ function App() {
               <Route path="vendors" element={<ManageVendors />} />
               <Route path="foods" element={<ManageFoods />} />
               <Route path="orders" element={<ManageOrders />} />
+              <Route path="profile" element={<AdminProfile />} />
             </Route>
 
             {/* ══════════════════════════════════════════════ */}
