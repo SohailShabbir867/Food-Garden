@@ -30,8 +30,25 @@ const Signup = () => {
       return;
     }
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 900));
-    const result = login({ email: form.email, password: form.password });
+    await new Promise((res) => setTimeout(res, 600));
+
+    // Save to localStorage registered users array
+    try {
+      const newUser = {
+        id: Date.now(),
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        role: "buyer",
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name)}&background=e21b70&color=fff`,
+      };
+      const existing = JSON.parse(localStorage.getItem("food_garden_registered_users") || "[]");
+      localStorage.setItem("food_garden_registered_users", JSON.stringify([newUser, ...existing]));
+    } catch (err) {
+      console.error(err);
+    }
+
+    const result = login({ email: form.email, password: form.password, role: "buyer" });
     if (result.success) {
       toast.success("Account created! Welcome to Food Garden 🎉");
       navigate("/");
