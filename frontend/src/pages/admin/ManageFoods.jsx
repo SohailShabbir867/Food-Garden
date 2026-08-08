@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaUtensils, FaSearch, FaFilter, FaBan, FaTrash, FaCheckCircle, FaStore, FaEyeSlash, FaEye } from "react-icons/fa";
+import { FaUtensils, FaSearch, FaTrash, FaCheckCircle, FaStore, FaEyeSlash, FaEye } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const MOCK_FOODS = [
