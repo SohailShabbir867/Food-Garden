@@ -78,7 +78,8 @@ const Chat = () => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Added e.keyCode === 13 to support mobile keyboards and legacy browsers
+    if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
