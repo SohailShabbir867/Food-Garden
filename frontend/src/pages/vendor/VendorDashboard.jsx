@@ -15,32 +15,37 @@ import {
 
 const VendorDashboard = () => {
   const stats = [
-    { label: "Today's Revenue", value: "PKR 18,450", icon: <FaMoneyBillWave className="text-emerald-500" />, change: "+12% from yesterday" },
-    { label: "Total Orders Today", value: "24 Orders", icon: <FaClipboardList className="text-blue-500" />, change: "4 pending kitchen" },
-    { label: "Active Listed Dishes", value: "14 Items", icon: <FaUtensils className="text-[#e21b70]" />, change: "All in stock" },
-    { label: "Kitchen Rating", value: "4.9 / 5.0", icon: <FaStar className="text-yellow-400" />, change: "128 reviews" },
+    { label: "Today's Revenue", value: "PKR 18,450", icon: <FaMoneyBillWave className="text-emerald-500" />, change: "+12% from yesterday", bg: "bg-emerald-50", border: "border-emerald-100" },
+    { label: "Total Orders Today", value: "24 Orders", icon: <FaClipboardList className="text-blue-500" />, change: "4 pending kitchen", bg: "bg-blue-50", border: "border-blue-100" },
+    { label: "Active Listed Dishes", value: "14 Items", icon: <FaUtensils className="text-accent" />, change: "All in stock", bg: "bg-pink-50", border: "border-pink-100" },
+    { label: "Kitchen Rating", value: "4.9 / 5.0", icon: <FaStar className="text-yellow-500" />, change: "128 reviews", bg: "bg-yellow-50", border: "border-yellow-100" },
   ];
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 font-sans">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#1a0009] via-[#3A0519] to-[#1a0009] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 relative overflow-hidden">
+      <div className="relative bg-gradient-to-br from-primary via-primary-light to-primary text-white p-8 sm:p-10 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 overflow-hidden">
+        {/* Abstract Background Decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+
         <div className="relative z-10">
-          <span className="text-[#e21b70] font-extrabold text-xs uppercase tracking-widest block mb-1">
+          <span className="inline-block px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-xs uppercase tracking-widest rounded-full mb-4">
             Vendor Kitchen Overview
           </span>
-          <h1 className="text-2xl sm:text-4xl font-black">Welcome Back, Burger Hub! 👋</h1>
-          <p className="text-gray-300 text-xs sm:text-sm font-medium mt-1">
-            Your kitchen is active. Manage menu items, fulfill live orders, and chat with buyers.
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight mb-2">Welcome Back, Burger Hub! <span className="inline-block animate-wave">👋</span></h1>
+          <p className="text-gray-300 text-sm sm:text-base font-medium max-w-xl">
+            Your kitchen is active. Manage menu items, fulfill live orders, and connect with your buyers easily.
           </p>
         </div>
 
         <div className="flex items-center gap-3 relative z-10">
           <Link
             to="/vendor/add-food"
-            className="bg-[#e21b70] hover:bg-pink-600 active:scale-95 text-white font-extrabold text-xs sm:text-sm px-6 py-3.5 rounded-2xl transition shadow-lg shadow-[#e21b70]/30 flex items-center gap-2"
+            className="group bg-accent hover:bg-accent-hover text-white font-bold text-sm px-6 py-4 rounded-2xl transition-all duration-300 shadow-xl shadow-accent/30 flex items-center gap-3 hover:-translate-y-1"
           >
-            <FaPlus /> Post New Food
+            <FaPlus className="group-hover:rotate-90 transition-transform duration-300" /> 
+            <span>Post New Food</span>
           </Link>
         </div>
       </div>
@@ -50,19 +55,19 @@ const VendorDashboard = () => {
         {stats.map((stat, idx) => (
           <motion.div
             key={idx}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs flex items-center justify-between"
+            transition={{ delay: idx * 0.1, duration: 0.5, ease: "easeOut" }}
+            className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
           >
             <div>
-              <span className="text-xs text-gray-400 font-extrabold uppercase tracking-wider block mb-1">
+              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">
                 {stat.label}
               </span>
-              <h3 className="text-2xl font-black text-[#3A0519]">{stat.value}</h3>
-              <span className="text-[11px] text-gray-500 font-medium mt-1 block">{stat.change}</span>
+              <h3 className="text-2xl font-black text-primary tracking-tight">{stat.value}</h3>
+              <span className="text-xs text-gray-500 font-medium mt-1 block">{stat.change}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl border border-gray-100">
+            <div className={`w-14 h-14 rounded-2xl ${stat.bg} ${stat.border} border flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300`}>
               {stat.icon}
             </div>
           </motion.div>
@@ -70,51 +75,54 @@ const VendorDashboard = () => {
       </div>
 
       {/* Quick Action Shortcuts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link
-          to="/vendor/add-food"
-          className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs hover:shadow-md transition flex items-center gap-4 group"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-pink-50 text-[#e21b70] flex items-center justify-center text-lg font-bold group-hover:scale-110 transition">
-            <FaPlus />
-          </div>
-          <div>
-            <h4 className="font-extrabold text-[#3A0519] text-base group-hover:text-[#e21b70] transition">
-              Post New Dish
-            </h4>
-            <p className="text-xs text-gray-500">Add photos, price, spice levels & add-ons</p>
-          </div>
-        </Link>
+      <div>
+        <h3 className="text-lg font-black text-primary mb-4 px-2">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link
+            to="/vendor/add-food"
+            className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-pink-200 transition-all duration-300 flex flex-col gap-4 group hover:-translate-y-1"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-pink-50 text-accent flex items-center justify-center text-xl font-bold group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all duration-300 shadow-sm">
+              <FaPlus />
+            </div>
+            <div>
+              <h4 className="font-bold text-primary text-lg group-hover:text-accent transition-colors">
+                Post New Dish
+              </h4>
+              <p className="text-sm text-gray-500 mt-1 leading-relaxed">Add photos, price, spice levels & customizable add-ons to your menu.</p>
+            </div>
+          </Link>
 
-        <Link
-          to="/vendor/orders"
-          className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs hover:shadow-md transition flex items-center gap-4 group"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold group-hover:scale-110 transition">
-            <FaClipboardList />
-          </div>
-          <div>
-            <h4 className="font-extrabold text-[#3A0519] text-base group-hover:text-blue-600 transition">
-              View Kitchen Orders
-            </h4>
-            <p className="text-xs text-gray-500">Track pending, preparing & dispatched orders</p>
-          </div>
-        </Link>
+          <Link
+            to="/vendor/orders"
+            className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col gap-4 group hover:-translate-y-1"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+              <FaClipboardList />
+            </div>
+            <div>
+              <h4 className="font-bold text-primary text-lg group-hover:text-blue-600 transition-colors">
+                View Kitchen Orders
+              </h4>
+              <p className="text-sm text-gray-500 mt-1 leading-relaxed">Track pending, preparing & dispatched orders in real-time.</p>
+            </div>
+          </Link>
 
-        <Link
-          to="/chat"
-          className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs hover:shadow-md transition flex items-center gap-4 group"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold group-hover:scale-110 transition">
-            <FaComments />
-          </div>
-          <div>
-            <h4 className="font-extrabold text-[#3A0519] text-base group-hover:text-emerald-600 transition">
-              Buyer Live Chat
-            </h4>
-            <p className="text-xs text-gray-500">Respond to customer questions instantly</p>
-          </div>
-        </Link>
+          <Link
+            to="/chat"
+            className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col gap-4 group hover:-translate-y-1"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-sm">
+              <FaComments />
+            </div>
+            <div>
+              <h4 className="font-bold text-primary text-lg group-hover:text-emerald-600 transition-colors">
+                Buyer Live Chat
+              </h4>
+              <p className="text-sm text-gray-500 mt-1 leading-relaxed">Respond to customer questions instantly and provide great service.</p>
+            </div>
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -70,7 +70,7 @@ const Navbar = () => {
   const getDashboardLink = () => {
     if (user?.role === "vendor") return "/vendor/dashboard";
     if (user?.role === "admin") return "/admin/dashboard";
-    return "/user/profile";
+    return "/user/dashboard";
   };
 
   const isActive = (path) => {
@@ -120,6 +120,18 @@ const Navbar = () => {
               </Link>
             );
           })}
+          {isAuthenticated && (
+            <Link
+              to={getDashboardLink()}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                isActive(getDashboardLink())
+                  ? "bg-[#e21b70] text-white shadow-md shadow-[#e21b70]/30"
+                  : "text-gray-200 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         {/* ── Right Actions ── */}
@@ -262,6 +274,7 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.path}
+                  onClick={() => setIsMenuOpen(false)}
                   className={`px-4 py-2.5 rounded-xl font-medium transition text-sm ${
                     isActive(link.path)
                       ? "bg-[#e21b70] text-white"
@@ -271,6 +284,19 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
+              {isAuthenticated && (
+                <Link
+                  to={getDashboardLink()}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`px-4 py-2.5 rounded-xl font-medium transition text-sm ${
+                    isActive(getDashboardLink())
+                      ? "bg-[#e21b70] text-white"
+                      : "text-white hover:bg-white/10"
+                  }`}
+                >
+                  Dashboard
+                </Link>
+              )}
               <div className="pt-2 flex flex-col gap-2 border-t border-white/10">
                 {isAuthenticated ? (
                   <>

@@ -7,11 +7,28 @@
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased selection:bg-accent selection:text-white;
+    font-family: 'Outfit', sans-serif;
   }
 }
 
 @layer utilities {
   .glass-panel {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+  
+  .glass-dark {
+    @apply bg-[#1a0009]/80 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  /* Custom scrollbar for webkit */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
   }
 }
