@@ -54,7 +54,6 @@ import VendorProfile from './pages/vendor/VendorProfile';
 
 // ─── User Pages ──────────────────────────────────────────────
 import UserProfile from './pages/user/Profile';
-import UserDashboard from './pages/user/Dashboard';
 
 function App() {
   return (
@@ -102,14 +101,6 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="buyer">
                     <UserProfile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/user/dashboard"
-                element={
-                  <ProtectedRoute requiredRole="buyer">
-                    <UserDashboard />
                   </ProtectedRoute>
                 }
               />

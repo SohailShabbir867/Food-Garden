@@ -120,7 +120,31 @@ const Navbar = () => {
               </Link>
             );
           })}
-          {isAuthenticated && (
+          {isAuthenticated && user?.role === 'buyer' && (
+            <>
+              <Link
+                to="/orders"
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  isActive("/orders")
+                    ? "bg-[#e21b70] text-white shadow-md shadow-[#e21b70]/30"
+                    : "text-gray-200 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                Track Order
+              </Link>
+              <Link
+                to="/my-orders"
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  isActive("/my-orders")
+                    ? "bg-[#e21b70] text-white shadow-md shadow-[#e21b70]/30"
+                    : "text-gray-200 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                Order History
+              </Link>
+            </>
+          )}
+          {isAuthenticated && user?.role !== 'buyer' && (
             <Link
               to={getDashboardLink()}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
@@ -216,9 +240,11 @@ const Navbar = () => {
                         <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
                       </div>
                       <div className="py-2">
-                        <Link to={getDashboardLink()} onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
-                          <FaTachometerAlt size={12} /> Dashboard
-                        </Link>
+                        {user?.role !== 'buyer' && (
+                          <Link to={getDashboardLink()} onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
+                            <FaTachometerAlt size={12} /> Dashboard
+                          </Link>
+                        )}
                         <Link to="/orders" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
                           <FaTruck size={12} /> Track Live Order
                         </Link>
@@ -284,7 +310,33 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              {isAuthenticated && (
+              {isAuthenticated && user?.role === 'buyer' && (
+                <>
+                  <Link
+                    to="/orders"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`px-4 py-2.5 rounded-xl font-medium transition text-sm ${
+                      isActive("/orders")
+                        ? "bg-[#e21b70] text-white"
+                        : "text-white hover:bg-white/10"
+                    }`}
+                  >
+                    Track Order
+                  </Link>
+                  <Link
+                    to="/my-orders"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`px-4 py-2.5 rounded-xl font-medium transition text-sm ${
+                      isActive("/my-orders")
+                        ? "bg-[#e21b70] text-white"
+                        : "text-white hover:bg-white/10"
+                    }`}
+                  >
+                    Order History
+                  </Link>
+                </>
+              )}
+              {isAuthenticated && user?.role !== 'buyer' && (
                 <Link
                   to={getDashboardLink()}
                   onClick={() => setIsMenuOpen(false)}
@@ -309,9 +361,21 @@ const Navbar = () => {
                         <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
                       </div>
                     </div>
-                    <Link to={getDashboardLink()} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
-                      <FaTachometerAlt size={12} /> Dashboard
-                    </Link>
+                    {user?.role !== 'buyer' && (
+                      <Link to={getDashboardLink()} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
+                        <FaTachometerAlt size={12} /> Dashboard
+                      </Link>
+                    )}
+                    {user?.role === 'buyer' && (
+                      <>
+                        <Link to="/orders" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
+                          <FaTruck size={12} /> Track Live Order
+                        </Link>
+                        <Link to="/my-orders" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
+                          <FaShoppingBag size={12} /> Reorder History
+                        </Link>
+                      </>
+                    )}
                     <button onClick={handleLogout} className="flex items-center gap-2 text-red-400 hover:text-red-300 transition text-sm px-1">
                       <FaSignOutAlt size={12} /> Logout
                     </button>
