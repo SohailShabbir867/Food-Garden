@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { connectSocket, disconnectSocket, socket } from "../socket";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -10,14 +11,25 @@ const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${BASE}/auth/me`, { credentials: "include" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => setUser(data?.user || null))
-      .catch(() => setUser(null));
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
+
+  // ── Connect / disconnect socket based on auth state ─────
+  useEffect(() => {
+    if (user?._id) {
+      connectSocket();
+      socket.emit("joinUser", user._id);
+    } else {
+      disconnectSocket();
+    }
+  }, [user]);
 
   // ── Login (calls real backend) ────────────────────────────
   const login = async ({ email, password }) => {
@@ -55,14 +67,31 @@ export const AuthProvider = ({ children }) => {
       // Ignore network errors on logout
     }
     setUser(null);
+    disconnectSocket();
   };
 
   // ── Update local profile state ─────────────────────────────
-  const updateProfile = (updatedData) => {
+  const updateProfile = async (updatedData) => {
     if (!user) return { success: false, message: "No user logged in." };
-    const newUserState = { ...user, ...updatedData };
-    setUser(newUserState);
-    return { success: true, message: "Profile updated successfully." };
+    try {
+      const res = await fetch(`${BASE}/auth/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updatedData),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        return { success: true, message: data.message || "Profile updated successfully." };
+      } else {
+        const errorData = await res.json();
+        return { success: false, message: errorData.message || "Failed to update profile." };
+      }
+    } catch (error) {
+      return { success: false, message: "Network error. Please try again." };
+    }
   };
 
   const isAuthenticated = !!user;

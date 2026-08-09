@@ -1,5 +1,5 @@
 // frontend/src/socket.js
-// Centralized Socket.io client connection for real-time two-way chat messaging.
+// Centralized Socket.io client connection for real-time messaging & order tracking.
 
 import { io } from "socket.io-client";
 
@@ -10,9 +10,17 @@ const SOCKET_URL =
     : "/");
 
 export const socket = io(SOCKET_URL, {
-  autoConnect: true,
+  autoConnect: false, // Don't connect until user is authenticated
   transports: ["websocket", "polling"],
   withCredentials: true,
 });
+
+export const connectSocket = () => {
+  if (!socket.connected) socket.connect();
+};
+
+export const disconnectSocket = () => {
+  if (socket.connected) socket.disconnect();
+};
 
 export default socket;
