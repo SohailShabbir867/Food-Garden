@@ -78,8 +78,9 @@ const ManageFoods = () => {
   };
 
   const filteredFoods = foods.filter((f) => {
-    const vendorName = f.vendor?.storeName || "Unknown Vendor";
-    const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase()) || vendorName.toLowerCase().includes(search.toLowerCase());
+    const foodName = f.title || f.name || "";
+    const vendorName = f.vendor?.storeName || f.vendorName || "Unknown Vendor";
+    const matchesSearch = foodName.toLowerCase().includes((search || "").toLowerCase()) || vendorName.toLowerCase().includes((search || "").toLowerCase());
     const matchesStatus = filterStatus === "all" || (filterStatus === "active" ? f.isAvailable : !f.isAvailable);
     return matchesSearch && matchesStatus;
   });
@@ -151,13 +152,13 @@ const ManageFoods = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <img 
-                          src={food.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"} 
-                          alt={food.name} 
+                          src={food.image || (food.images && food.images[0]) || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"} 
+                          alt={food.title || food.name || "Food"} 
                           className="w-12 h-12 rounded-xl object-cover border border-gray-200 shadow-sm"
                         />
                         <div>
-                          <p className="font-bold text-gray-900 text-base">{food.name}</p>
-                          <p className="text-xs text-gray-400 font-mono mt-0.5">{food._id.slice(-6).toUpperCase()}</p>
+                          <p className="font-bold text-gray-900 text-base">{food.title || food.name || "Unnamed Food"}</p>
+                          <p className="text-xs text-gray-400 font-mono mt-0.5">{food._id ? food._id.slice(-6).toUpperCase() : ""}</p>
                         </div>
                       </div>
                     </td>
