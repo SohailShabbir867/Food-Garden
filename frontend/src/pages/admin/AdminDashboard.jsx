@@ -66,8 +66,8 @@ const recentActivity = [
 ];
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
-const StatCard = ({ title, value, change, positive, icon: Icon, color, bg }) => (
-  <div className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start justify-between group hover:shadow-lg transition-all duration-300`}>
+const StatCard = ({ title, value, change, positive, icon: Icon, color, bg, delay }) => (
+  <div data-aos="fade-up" data-aos-delay={delay} className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start justify-between group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300`}>
     <div>
       <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
       <h3 className="text-3xl font-black text-gray-900 tracking-tight">{value}</h3>
@@ -121,21 +121,21 @@ const AdminDashboard = () => {
     <div className="space-y-6">
 
       {/* ── Page Header ───────────────────────────────────────────── */}
-      <div>
+      <div data-aos="fade-up">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">Dashboard Overview</h1>
         <p className="text-gray-500 text-sm mt-1">Welcome back, Admin. Here's what's happening today.</p>
       </div>
 
       {/* ── Stat Cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        {stats.map((s) => <StatCard key={s.title} {...s} />)}
+        {stats.map((s, i) => <StatCard key={s.title} {...s} delay={i * 60} />)}
       </div>
 
       {/* ── Charts Row ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
         {/* Growth Chart — spans 2 cols */}
-        <div className="xl:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div data-aos="fade-up" className="xl:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h2 className="font-black text-gray-900 text-lg">Platform Growth</h2>
@@ -148,7 +148,7 @@ const AdminDashboard = () => {
                   onClick={() => setActiveChart(c)}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${
                     activeChart === c
-                      ? "bg-gray-900 text-white shadow"
+                      ? "bg-[#3A0519] text-white shadow"
                       : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                   }`}
                 >
@@ -162,8 +162,8 @@ const AdminDashboard = () => {
               <AreaChart data={userGrowthData}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#3A0519" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#3A0519" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorVendors" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#e21b70" stopOpacity={0.2} />
@@ -175,7 +175,7 @@ const AdminDashboard = () => {
                 <YAxis tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }} />
-                <Area type="monotone" dataKey="users"   name="Users"   stroke="#7c3aed" strokeWidth={2.5} fill="url(#colorUsers)"   dot={false} activeDot={{ r: 5, fill: "#7c3aed" }} />
+                <Area type="monotone" dataKey="users"   name="Users"   stroke="#3A0519" strokeWidth={2.5} fill="url(#colorUsers)"   dot={false} activeDot={{ r: 5, fill: "#3A0519" }} />
                 <Area type="monotone" dataKey="vendors" name="Vendors" stroke="#e21b70" strokeWidth={2.5} fill="url(#colorVendors)" dot={false} activeDot={{ r: 5, fill: "#e21b70" }} />
               </AreaChart>
             ) : (
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Weekly Orders Bar Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div data-aos="fade-up" data-aos-delay="100" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="mb-6">
             <h2 className="font-black text-gray-900 text-lg">Weekly Orders</h2>
             <p className="text-gray-400 text-sm">This week's order volume</p>
@@ -218,7 +218,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
         {/* Recent Activity */}
-        <div className="xl:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div data-aos="fade-up" className="xl:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <h2 className="font-black text-gray-900 text-lg mb-5">Recent Activity</h2>
           <div className="space-y-4">
             {recentActivity.map((item) => (
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Quick Stats Panel */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
+        <div data-aos="fade-up" data-aos-delay="100" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
           <h2 className="font-black text-gray-900 text-lg">Quick Stats</h2>
 
           <div className="flex items-center justify-between py-3 border-b border-gray-50">
@@ -251,12 +251,12 @@ const AdminDashboard = () => {
 
           <div className="flex items-center justify-between py-3 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-violet-50 text-violet-500 rounded-xl flex items-center justify-center">
+              <div className="w-9 h-9 bg-[#3A0519]/5 text-[#3A0519] rounded-xl flex items-center justify-center">
                 <FaBell size={14} />
               </div>
               <span className="text-sm font-semibold text-gray-700">Notifications Sent</span>
             </div>
-            <span className="text-lg font-black text-violet-500">38</span>
+            <span className="text-lg font-black text-[#3A0519]">38</span>
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-gray-50">
@@ -286,7 +286,7 @@ const AdminDashboard = () => {
               <span>73%</span>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#e21b70] to-violet-500 rounded-full" style={{ width: "73%" }} />
+              <div className="h-full bg-gradient-to-r from-[#e21b70] to-[#3A0519] rounded-full" style={{ width: "73%" }} />
             </div>
           </div>
         </div>
