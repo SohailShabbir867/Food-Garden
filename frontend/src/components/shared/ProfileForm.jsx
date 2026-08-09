@@ -42,20 +42,17 @@ const ProfileForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const res = updateProfile(formData);
-      if (res) {
-        toast.success("Profile updated successfully!");
-      } else {
-        toast.error("Failed to update profile.");
-      }
-      setIsLoading(false);
-    }, 600);
+    const res = await updateProfile(formData);
+    if (res.success) {
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
+    }
+    setIsLoading(false);
   };
 
   if (!user) return null;

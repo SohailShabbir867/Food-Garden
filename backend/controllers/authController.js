@@ -11,10 +11,15 @@ const normaliseEmail = (email) => (typeof email === "string" ? email.trim().toLo
 
 // Shape a user for API responses — never send back password/otp fields.
 const publicUser = (user) => ({
+  _id: user._id,
   id: user._id,
   name: user.name,
   email: user.email,
   role: user.role,
+  phone: user.phone,
+  city: user.city,
+  avatar: user.avatar,
+  status: user.status,
   isVerified: user.isVerified,
   restaurantName: user.restaurantName,
 });
@@ -309,6 +314,29 @@ const getMe = async (req, res) => {
   }
 };
 
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, password, description, avatar } = req.body;
+    const user = await User.findById(req.user.id || req.user._id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (description) user.description = description;
+    if (avatar) user.avatar = avatar;
+    
+    if (password && password.trim() !== "") {
+      user.password = password; // pre-save hook in User model will hash it
+    }
+
+    await user.save();
+    res.json({ message: "Profile updated successfully", user: publicUser(user) });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update profile", error: error.message });
+  }
+};
+
 module.exports = {
   register,
   verifyOtp,
@@ -318,4 +346,5 @@ module.exports = {
   resetPassword,
   logout,
   getMe,
+  updateProfile: exports.updateProfile,
 };
