@@ -17,6 +17,7 @@ require("./config/nodemailer"); // verifies Gmail creds on boot (logs success/fa
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const vendorRoutes = require("./routes/vendorRoutes");
 const chatSocket = require("./socket/chatSocket");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
@@ -52,6 +53,7 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/vendor", vendorRoutes);
 
 // ── Error handling (must be last) ────────────────────────────
 app.use(notFound);
