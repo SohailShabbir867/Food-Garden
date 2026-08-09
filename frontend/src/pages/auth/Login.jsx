@@ -12,12 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 import SliderImage from "../../assets/slider/loginslider.jpg";
 
-// Quick-fill demo credentials from real backend
-const DEMO = [
-  { key: "buyer",  label: "Buyer",  email: "sohail@example.com",        password: "password123", icon: <FaUserCheck />, color: "pink" },
-  { key: "vendor", label: "Vendor", email: "spicegarden@foodgarden.com", password: "password123", icon: <FaStore />,     color: "amber" },
-  { key: "admin",  label: "Admin",  email: "admin@foodgarden.com",       password: "admin123",    icon: <FaUserShield />, color: "purple" },
-];
+
 
 const Login = () => {
   const { login } = useAuth();
@@ -36,20 +31,7 @@ const Login = () => {
     else navigate(from);
   };
 
-  // Quick-fill + login with demo account
-  const handleQuickDemo = async (demo) => {
-    setEmail(demo.email);
-    setPassword(demo.password);
-    setLoading(true);
-    const result = await login({ email: demo.email, password: demo.password });
-    if (result.success) {
-      toast.success(`🔑 Logged in as ${result.user.name} (${result.role.toUpperCase()})`);
-      redirect(result.role);
-    } else {
-      toast.error(result.message || "Demo login failed");
-    }
-    setLoading(false);
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,36 +70,7 @@ const Login = () => {
             </h1>
           </div>
 
-          {/* Quick Demo Accounts */}
-          <div className="bg-white/5 border border-white/10 p-4 rounded-2xl mb-6">
-            <p className="text-gray-300 text-xs font-bold uppercase tracking-wider mb-2.5">
-              ⚡ 1-Click Demo Accounts
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEMO.map((d) => (
-                <button
-                  key={d.key}
-                  type="button"
-                  onClick={() => handleQuickDemo(d)}
-                  disabled={loading}
-                  className={`bg-${d.color}-600/20 hover:bg-${d.color}-600/40 border border-${d.color}-500/30 text-white p-2.5 rounded-xl transition text-center cursor-pointer disabled:opacity-50`}
-                >
-                  <span className={`text-${d.color === "pink" ? "[#e21b70]" : d.color === "amber" ? "amber-400" : "purple-400"} text-sm block mx-auto mb-1`}>
-                    {d.icon}
-                  </span>
-                  <span className="text-[11px] font-extrabold block">{d.label}</span>
-                  <span className="text-[9px] text-gray-400 block font-mono truncate">{d.email.split("@")[0]}@</span>
-                </button>
-              ))}
-            </div>
-          </div>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-gray-500 text-xs">or sign in manually</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
