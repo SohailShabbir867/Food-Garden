@@ -237,6 +237,17 @@ exports.toggleFoodAvailability = async (req, res) => {
   }
 };
 
+exports.deleteFood = async (req, res) => {
+  try {
+    const food = await Food.findByIdAndDelete(req.params.id);
+    if (!food) return res.status(404).json({ message: "Food item not found" });
+
+    res.json({ message: "Food item deleted permanently" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete food item", error: error.message });
+  }
+};
+
 // ── 5. Order Management ─────────────────────────────────────────────────────
 exports.getOrders = async (req, res) => {
   try {
@@ -294,7 +305,18 @@ exports.updateReportStatus = async (req, res) => {
   }
 };
 
-// ── 7. Contact Support Queries & Replies ────────────────────────────────────
+exports.deleteReport = async (req, res) => {
+  try {
+    const report = await Report.findByIdAndDelete(req.params.id);
+    if (!report) return res.status(404).json({ message: "Report not found" });
+
+    res.json({ message: "Report deleted permanently" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete report", error: error.message });
+  }
+};
+
+// ── 7. Support Contacts Management ────────────────────────────────────────────
 exports.getContacts = async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });

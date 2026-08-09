@@ -21,6 +21,8 @@ const {
   updateContactStatus,
   sendNotification,
   getNotifications,
+  deleteFood,
+  deleteReport,
 } = require("../controllers/adminController");
 
 // Protect all admin routes (verify token & role === 'admin')
@@ -42,6 +44,7 @@ router.put("/vendors/:id/status", updateVendorStatus);
 // Food Management
 router.get("/foods", getFoods);
 router.put("/foods/:id/status", toggleFoodAvailability);
+router.delete("/foods/:id", deleteFood);
 
 // Order Management
 router.get("/orders", getOrders);
@@ -50,6 +53,7 @@ router.put("/orders/:id/status", updateOrderStatus);
 // Report Management
 router.get("/reports", getReports);
 router.put("/reports/:id/status", updateReportStatus);
+router.delete("/reports/:id", deleteReport);
 
 // Support Contacts Management
 router.get("/contacts", getContacts);
