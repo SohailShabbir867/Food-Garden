@@ -1,28 +1,49 @@
+// src/pages/auth/ForgotPassword.jsx
+
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaEnvelope, FaArrowRight } from "react-icons/fa";
+import { FaEnvelope, FaArrowRight, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { forgotPasswordApi } from "../../services/authApi";
 import BgImage from "../../assets/hero/Burger.jpg";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 900));
-    setSent(true);
-    toast.success("OTP sent! Check your email.");
-    setLoading(false);
+    try {
+      await forgotPasswordApi(email.trim().toLowerCase());
+      setSent(true);
+      toast.success("Reset code sent! Check your email. 📧");
+    } catch (err) {
+      // API intentionally returns success even if email not found for security
+      // But show a generic message if there's a real network error
+      toast.error(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goToVerify = () => {
+    navigate("/verify-otp", {
+      state: { email: email.trim().toLowerCase(), mode: "reset" },
+    });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 pt-24 relative overflow-hidden bg-[#1a0009]">
       {/* Background Image & Overlay */}
-      <img src={BgImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+      <img
+        src={BgImage}
+        alt="Background"
+        className="absolute inset-0 w-full h-full object-cover opacity-50"
+      />
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a0009]/95 via-[#1a0009]/80 to-black/90" />
       <div className="absolute top-1/4 left-0 w-72 h-72 bg-[#e21b70] rounded-full filter blur-[100px] opacity-30 -translate-x-1/2 pointer-events-none" />
 
@@ -46,7 +67,7 @@ const ForgotPassword = () => {
 
           <h1 className="text-3xl font-extrabold text-white mb-2">Forgot Password?</h1>
           <p className="text-gray-400 text-sm mb-8">
-            No worries! Enter your email and we'll send you a reset code.
+            No worries! Enter your registered email and we'll send you a 6-digit reset code.
           </p>
 
           {!sent ? (
@@ -54,8 +75,9 @@ const ForgotPassword = () => {
               <div className="relative">
                 <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
+                  id="forgot-email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Enter your registered email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -67,13 +89,10 @@ const ForgotPassword = () => {
                 whileTap={{ scale: 0.97 }}
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#e21b70] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#e21b70]/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full bg-[#e21b70] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#e21b70]/30 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? (
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
+                  <><FaSpinner className="animate-spin" /> Sending...</>
                 ) : (
                   <><FaArrowRight /> Send Reset Code</>
                 )}
@@ -85,22 +104,42 @@ const ForgotPassword = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="space-y-4"
             >
+              {/* Success state */}
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border border-green-500/30">
                 <span className="text-3xl">✉️</span>
               </div>
-              <p className="text-green-400 font-semibold">Reset code sent to <br /><span className="text-white">{email}</span></p>
-              <Link
-                to="/verify-otp"
-                className="inline-block w-full bg-[#e21b70] text-white font-bold py-3.5 rounded-xl hover:bg-pink-600 transition shadow-lg"
+
+              <div>
+                <p className="text-green-400 font-semibold text-sm">
+                  Reset code sent to
+                </p>
+                <p className="text-white font-extrabold text-base mt-1">{email}</p>
+                <p className="text-gray-500 text-xs mt-2">
+                  Didn't receive it? Check your spam folder or wait a minute.
+                </p>
+              </div>
+
+              <button
+                onClick={goToVerify}
+                className="w-full bg-[#e21b70] text-white font-bold py-3.5 rounded-xl hover:bg-pink-600 transition shadow-lg cursor-pointer"
               >
-                Enter OTP Code →
-              </Link>
+                Enter OTP & Set New Password →
+              </button>
+
+              <button
+                onClick={() => { setSent(false); setEmail(""); }}
+                className="w-full text-gray-400 text-sm hover:text-white transition cursor-pointer"
+              >
+                Try a different email
+              </button>
             </motion.div>
           )}
 
           <p className="text-center text-gray-500 text-sm mt-6">
             Remember it?{" "}
-            <Link to="/login" className="text-[#e21b70] hover:text-pink-400 font-semibold transition">Back to Login</Link>
+            <Link to="/login" className="text-[#e21b70] hover:text-pink-400 font-semibold transition">
+              Back to Login
+            </Link>
           </p>
         </div>
       </motion.div>
