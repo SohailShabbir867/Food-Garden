@@ -24,6 +24,7 @@ import EasyPaisaLogo from "../assets/logo/easypasa.png";
 import BankLogo from "../assets/logo/bank_transfer.png";
 import CodLogo from "../assets/logo/cod.png";
 import CardLogo from "../assets/logo/card.png";
+import { createOrder } from "../services/api";
 
 const PaymentPage = () => {
   const { cartItems, subtotal, clearCart } = useCart();
@@ -85,38 +86,22 @@ const PaymentPage = () => {
 
     setLoading(true);
 
-    const newOrderId = `FG-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    // Build order record for Buyer Orders history page
-    const newOrderRecord = {
-      id: newOrderId,
-      date: new Date().toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      status: "Preparing",
-      items: cartItems.map((item) => ({ ...item })),
-      totalAmount: grandTotal,
-      paymentMethod: form.paymentMethod,
-      address: `${form.address}, ${form.area ? form.area + ", " : ""}${form.city}`,
-      customerName: form.name,
-      phone: form.phone,
-    };
-
     try {
-      const existingOrders = JSON.parse(localStorage.getItem("food_garden_orders") || "[]");
-      localStorage.setItem("food_garden_orders", JSON.stringify([newOrderRecord, ...existingOrders]));
-    } catch (e) {
-      console.error("Failed to save order history:", e);
+      const { order } = await createOrder({
+        items: cartItems.map((item) => ({ foodId: item.id, quantity: item.quantity })),
+        deliveryAddress: `${form.address}, ${form.area ? `${form.area}, ` : ""}${form.city}`,
+        phone: form.phone,
+        paymentMethod: form.paymentMethod,
+      });
+      setPlacedOrderId(order.orderNumber);
+      setOrderComplete(true);
+      clearCart();
+      toast.success("Order placed successfully!");
+    } catch (error) {
+      toast.error(error.message || "Unable to place your order");
+    } finally {
+      setLoading(false);
     }
-
-    setPlacedOrderId(newOrderId);
-    setLoading(false);
-    setOrderComplete(true);
-    clearCart();
     toast.success("Order placed successfully! 🎉");
   };
 

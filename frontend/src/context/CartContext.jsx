@@ -1,29 +1,13 @@
 // src/context/CartContext.jsx
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem("food_garden_cart");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Persist cart to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("food_garden_cart", JSON.stringify(cartItems));
-    } catch (e) {
-      console.error("Failed to save cart to localStorage", e);
-    }
-  }, [cartItems]);
+  const [cartItems, setCartItems] = useState([]);
 
   // Helper to build a unique key for items with distinct options
   const generateCartItemId = (item) => {

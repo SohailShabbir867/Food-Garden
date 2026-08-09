@@ -21,7 +21,7 @@ const VerifyOTP = () => {
   const refs = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { setAuthenticatedUser } = useAuth();
 
   // email and mode ("signup" | "reset") passed via navigation state
   const email = location.state?.email || "";
@@ -71,14 +71,14 @@ const VerifyOTP = () => {
       const data = await verifyOtpApi({ email, otp: code });
 
       // Save token from verification response
-      if (data.token) localStorage.setItem("food_garden_token", data.token);
+      // Authentication is held in the server-issued httpOnly cookie.
 
       toast.success("Email verified! Welcome to Food Garden 🎉");
 
       // Re-log through AuthContext so user state is set
       // (verifyOtp returns a token — use it via getMe or just redirect)
       if (data.user) {
-        localStorage.setItem("food_garden_user", JSON.stringify(data.user));
+        setAuthenticatedUser(data.user);
       }
 
       navigate("/");

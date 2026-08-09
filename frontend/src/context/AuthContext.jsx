@@ -8,25 +8,16 @@ export const useAuth = () => useContext(AuthContext);
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem("food_garden_user");
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
-  // Sync user to localStorage
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("food_garden_user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("food_garden_user");
-    }
-  }, [user]);
+    fetch(`${BASE}/auth/me`, { credentials: "include" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setUser(data?.user || null))
+      .catch(() => setUser(null));
+  }, []);
 
   // ── Login (calls real backend) ────────────────────────────
   const login = async ({ email, password }) => {
@@ -48,11 +39,6 @@ export const AuthProvider = ({ children }) => {
       const loggedUser = { ...data.user };
       setUser(loggedUser);
 
-      // Persist JWT token so vendorApi / adminApi service layer can attach it
-      if (data.token) {
-        localStorage.setItem("food_garden_token", data.token);
-      }
-
       return { success: true, role: loggedUser.role, user: loggedUser };
     } catch {
       return { success: false, message: "Network error. Is the server running?" };
@@ -69,8 +55,6 @@ export const AuthProvider = ({ children }) => {
       // Ignore network errors on logout
     }
     setUser(null);
-    localStorage.removeItem("food_garden_user");
-    localStorage.removeItem("food_garden_token");
   };
 
   // ── Update local profile state ─────────────────────────────
@@ -93,6 +77,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         updateProfile,
+        setAuthenticatedUser: setUser,
         isAuthenticated,
         isAdmin,
         isVendor,
