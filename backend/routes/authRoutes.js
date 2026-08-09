@@ -28,6 +28,6 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
 // ── Current user (protected) ─────────────────────────────
-router.get("/me", protect, getMe);
+router.get("/me", getMe);
 
 module.exports = router;

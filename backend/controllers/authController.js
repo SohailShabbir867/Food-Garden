@@ -281,10 +281,32 @@ const logout = (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────
-// GET /api/auth/me  (protected)
+// GET /api/auth/me  (protected manually)
 // ─────────────────────────────────────────────────────────────────
 const getMe = async (req, res) => {
-  res.json({ user: publicUser(req.user) });
+  try {
+    const jwt = require("jsonwebtoken");
+    let token = req.cookies?.token;
+    
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
+      return res.json({ user: null }); // Returns 200 OK instead of 401
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.status !== "active" || !user.isVerified) {
+      return res.json({ user: null });
+    }
+
+    res.json({ user: publicUser(user) });
+  } catch (error) {
+    return res.json({ user: null });
+  }
 };
 
 module.exports = {
