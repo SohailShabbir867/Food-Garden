@@ -4,23 +4,7 @@
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-const getToken = () => {
-  try {
-    // Token stored in cookie by the backend (httpOnly), but we also
-    // support an Authorization header fallback for dev/testing.
-    return localStorage.getItem("food_garden_token") || null;
-  } catch {
-    return null;
-  }
-};
-
-const headers = () => {
-  const token = getToken();
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
+const headers = () => ({ "Content-Type": "application/json" });
 
 const handleRes = async (res) => {
   const data = await res.json().catch(() => ({}));

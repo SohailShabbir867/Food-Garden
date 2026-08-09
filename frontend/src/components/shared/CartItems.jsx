@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaStore, FaArrowRight } from "react-icons/fa";
-import { allFoods } from "../../data/foodData";
-
-// NOTE: Images are imported inside foodData.js — no need to re-import them here.
+import { fetchFoods } from "../../services/api";
 
 const RecommendedFoods = () => {
   const navigate = useNavigate();
+  const [foods, setFoods] = useState([]);
+
+  useEffect(() => {
+    fetchFoods().then(setFoods).catch(() => setFoods([]));
+  }, []);
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {
@@ -79,7 +82,7 @@ const RecommendedFoods = () => {
         viewport={{ once: true, margin: "-50px" }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10 max-w-7xl mx-auto"
       >
-        {allFoods.map((food) => (
+        {foods.map((food) => (
           <motion.div
             key={food.id}
             variants={itemVariants}
@@ -104,7 +107,7 @@ const RecommendedFoods = () => {
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-100 group-hover:opacity-0"
               />
               <img
-                src={food.images[1]}
+                src={food.images[1] || food.images[0]}
                 alt={food.name + " hover"}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 transform scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-100"
               />

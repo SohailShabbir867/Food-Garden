@@ -14,7 +14,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
-import { allFoods, categories } from "../data/foodData";
+import { fetchFoods } from "../services/api";
 import { toast } from "react-toastify";
 import menuHeroImg from "../assets/hero/menuePage.jpg";
 
@@ -28,10 +28,19 @@ const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("recommended"); // 'recommended' | 'price-low' | 'price-high' | 'rating'
   const [currentPage, setCurrentPage] = useState(1);
+  const [foods, setFoods] = useState([]);
+  const [loadingFoods, setLoadingFoods] = useState(true);
 
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const menuGridRef = useRef(null);
+
+  useEffect(() => {
+    fetchFoods()
+      .then(setFoods)
+      .catch((error) => toast.error(error.message || "Unable to load the menu"))
+      .finally(() => setLoadingFoods(false));
+  }, []);
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {
@@ -42,7 +51,7 @@ const Menu = () => {
 
   // Filter & Sort Logic
   const filteredFoods = useMemo(() => {
-    return allFoods
+    return foods
       .filter((item) => {
         const matchesCategory =
           selectedCategory === "All" || item.category === selectedCategory;
@@ -58,7 +67,9 @@ const Menu = () => {
         if (sortBy === "rating") return b.rating - a.rating;
         return a.id - b.id;
       });
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [foods, selectedCategory, searchQuery, sortBy]);
+
+  const categories = ["All", ...new Set(foods.map((food) => food.category).filter(Boolean))];
 
   // Reset to Page 1 on filter changes
   useEffect(() => {

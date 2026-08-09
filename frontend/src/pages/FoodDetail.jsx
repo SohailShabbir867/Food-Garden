@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
@@ -16,19 +16,29 @@ import {
   FaStore,
   FaTag,
 } from "react-icons/fa";
-import { allFoods } from "../data/foodData";
+import { fetchFood } from "../services/api";
 
 const FoodDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const food = allFoods.find((f) => f.id === parseInt(id));
+  const [food, setFood] = useState(null);
+  const [loadingFood, setLoadingFood] = useState(true);
+
+  useEffect(() => {
+    setLoadingFood(true);
+    fetchFood(id).then(setFood).catch(() => setFood(null)).finally(() => setLoadingFood(false));
+  }, [id]);
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSpice, setSelectedSpice] = useState(0);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [quantity, setQuantity] = useState(1);
+
+  if (loadingFood) {
+    return <div className="min-h-screen flex items-center justify-center bg-white text-[#3A0519]">Loading food item…</div>;
+  }
 
   if (!food) {
     return (
@@ -51,6 +61,8 @@ const FoodDetail = () => {
       maximumFractionDigits: 0,
     }).format(amount);
 
+  const images = food.images.length ? food.images : [food.image].filter(Boolean);
+
   const toggleAddOn = (index) => {
     setSelectedAddOns((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
@@ -70,7 +82,7 @@ const FoodDetail = () => {
       id: food.id,
       name: food.name,
       price: unitPrice,
-      image: food.images[0],
+      image: images[0] || "",
       spice: food.spiceLevels[selectedSpice].label,
       addOns: selectedAddOns.map((i) => food.addOns[i].label),
       quantity,
@@ -109,7 +121,7 @@ const FoodDetail = () => {
             <AnimatePresence mode="wait">
               <motion.img
                 key={activeImage}
-                src={food.images[activeImage]}
+                src={images[activeImage]}
                 alt={food.name}
                 initial={{ opacity: 0, scale: 1.04 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -126,7 +138,7 @@ const FoodDetail = () => {
 
           {/* Thumbnail strip */}
           <div className="flex gap-3 mt-4">
-            {food.images.map((img, i) => (
+            {images.map((img, i) => (
               <button
                 key={i}
                 onClick={() => setActiveImage(i)}

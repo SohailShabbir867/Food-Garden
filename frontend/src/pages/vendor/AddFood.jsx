@@ -15,7 +15,9 @@ import {
   FaCloudUploadAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { allFoods, categories } from "../../data/foodData";
+import { addFoodItem } from "../../services/vendorApi";
+
+const categories = ["Burgers", "Pizza", "Rolls", "Desi", "Drinks", "Desserts", "Others"];
 
 const AddFood = () => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const AddFood = () => {
   // Form State
   const [form, setForm] = useState({
     name: "",
-    category: "Fast Food",
+    category: "Others",
     basePrice: "",
     description: "",
     vendorName: "Burger Hub (My Kitchen)",
@@ -109,7 +111,7 @@ const AddFood = () => {
   };
 
   // Submit Handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.basePrice || !form.description.trim()) {
@@ -117,32 +119,21 @@ const AddFood = () => {
       return;
     }
 
-    const newFoodItem = {
-      id: Date.now(),
-      name: form.name,
-      basePrice: Number(form.basePrice),
-      category: form.category,
-      vendorId: "vendor_1",
-      vendorName: form.vendorName,
-      vendorAvatar: "https://ui-avatars.com/api/?name=Burger+Hub&background=3A0519&color=fff",
-      rating: 5.0,
-      reviews: 1,
-      description: form.description,
-      images: imageUrls,
-      spiceLevels: spiceLevels,
-      addOns: addOns,
-      tags: form.tags,
-    };
-
-    // Prepend to allFoods array in data memory
-    allFoods.unshift(newFoodItem);
-
-    // Also persist to localStorage for local testing
     try {
-      const vendorFoods = JSON.parse(localStorage.getItem("food_garden_vendor_foods") || "[]");
-      localStorage.setItem("food_garden_vendor_foods", JSON.stringify([newFoodItem, ...vendorFoods]));
-    } catch (err) {
-      console.error(err);
+      await addFoodItem({
+        title: form.name.trim(),
+        price: Number(form.basePrice),
+        category: form.category,
+        description: form.description.trim(),
+        image: imageUrls[0] || "",
+        images: imageUrls,
+        spiceLevels,
+        addOns,
+        tags: form.tags,
+      });
+    } catch (error) {
+      toast.error(error.message || "Unable to add food item");
+      return;
     }
 
     toast.success(`🎉 "${form.name}" has been posted to the Food Marketplace!`);
