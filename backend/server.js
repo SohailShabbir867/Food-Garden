@@ -22,7 +22,11 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 const server = http.createServer(app);
-const clientOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+const clientOrigin = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:3000"
+].filter(Boolean);
 
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json());
