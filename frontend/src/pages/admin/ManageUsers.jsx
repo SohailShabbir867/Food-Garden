@@ -1,15 +1,8 @@
-import React, { useState } from "react";
-import { FaUser, FaSearch, FaFilter, FaBan, FaTrash, FaCheckCircle, FaUserShield, FaStore, FaEllipsisV } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaUser, FaSearch, FaFilter, FaBan, FaTrash, FaCheckCircle, FaUserShield, FaStore, FaEllipsisV, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const MOCK_USERS = [
-  { id: "U-1001", name: "Sohail Shabbir", email: "sohail@example.com", role: "buyer",  status: "active",  joined: "2026-01-15", avatar: null },
-  { id: "U-1002", name: "Ali Hassan",     email: "ali@example.com",    role: "buyer",  status: "active",  joined: "2026-02-20", avatar: null },
-  { id: "V-2001", name: "Spice Garden",   email: "spice@vendor.com",   role: "vendor", status: "active",  joined: "2026-03-05", avatar: null },
-  { id: "V-2002", name: "Lahori Bites",   email: "lahori@vendor.com",  role: "vendor", status: "blocked", joined: "2026-04-12", avatar: null },
-  { id: "U-1003", name: "Sara Khan",      email: "sara@example.com",   role: "buyer",  status: "active",  joined: "2026-05-30", avatar: null },
-  { id: "V-2003", name: "Desi Dhaba",     email: "desi@vendor.com",    role: "vendor", status: "active",  joined: "2026-06-18", avatar: null },
-];
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const RoleBadge = ({ role }) => {
   return role === "vendor" ? (
@@ -36,20 +29,61 @@ const StatusBadge = ({ status }) => {
 };
 
 const ManageUsers = () => {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const handleToggleBlock = (id, currentStatus) => {
-    const newStatus = currentStatus === "active" ? "blocked" : "active";
-    setUsers(users.map(u => u.id === id ? { ...u, status: newStatus } : u));
-    toast.success(`User has been ${newStatus}.`);
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BASE}/admin/users`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const data = await res.json();
+      setUsers(data);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleToggleBlock = async (id, currentStatus) => {
+    const newStatus = currentStatus === "active" ? "blocked" : "active";
+    try {
+      const res = await fetch(`${BASE}/admin/users/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update user status");
+      
+      setUsers(users.map(u => u._id === id ? { ...u, status: newStatus } : u));
+      toast.success(`User has been ${newStatus}.`);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to permanently delete this user?")) {
-      setUsers(users.filter(u => u.id !== id));
-      toast.error("User deleted permanently.");
+      try {
+        const res = await fetch(`${BASE}/admin/users/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to delete user");
+        
+        setUsers(users.filter(u => u._id !== id));
+        toast.error("User deleted permanently.");
+      } catch (error) {
+        toast.error(error.message);
+      }
     }
   };
 
@@ -109,13 +143,19 @@ const ManageUsers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredUsers.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-16 text-gray-400 font-medium">
+                    <FaSpinner className="animate-spin inline mr-2" /> Loading users...
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-16 text-gray-400 font-medium">No users found.</td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50/80 transition-colors group">
+                  <tr key={user._id} className="hover:bg-gray-50/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img 
@@ -133,7 +173,7 @@ const ManageUsers = () => {
                       <RoleBadge role={user.role} />
                     </td>
                     <td className="px-6 py-4 text-gray-500 font-medium hidden md:table-cell">
-                      {user.joined}
+                      {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={user.status} />
@@ -141,7 +181,7 @@ const ManageUsers = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => handleToggleBlock(user.id, user.status)}
+                          onClick={() => handleToggleBlock(user._id, user.status)}
                           title={user.status === 'active' ? "Block User" : "Unblock User"}
                           className={`p-2 rounded-lg font-bold transition-colors ${
                             user.status === 'active' 
@@ -152,7 +192,7 @@ const ManageUsers = () => {
                           {user.status === 'active' ? <FaBan size={14} /> : <FaCheckCircle size={14} />}
                         </button>
                         <button
-                          onClick={() => handleDelete(user.id)}
+                          onClick={() => handleDelete(user._id)}
                           title="Delete User"
                           className="p-2 rounded-lg font-bold bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
                         >

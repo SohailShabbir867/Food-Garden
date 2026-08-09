@@ -25,45 +25,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const userGrowthData = [
-  { month: "Feb", users: 40, vendors: 5 },
-  { month: "Mar", users: 80, vendors: 9 },
-  { month: "Apr", users: 130, vendors: 15 },
-  { month: "May", users: 190, vendors: 22 },
-  { month: "Jun", users: 260, vendors: 30 },
-  { month: "Jul", users: 350, vendors: 41 },
-  { month: "Aug", users: 420, vendors: 55 },
-];
-
-const revenueData = [
-  { month: "Feb", revenue: 12000 },
-  { month: "Mar", revenue: 28000 },
-  { month: "Apr", revenue: 45000 },
-  { month: "May", revenue: 38000 },
-  { month: "Jun", revenue: 62000 },
-  { month: "Jul", revenue: 78000 },
-  { month: "Aug", revenue: 95000 },
-];
-
-const ordersData = [
-  { day: "Mon", orders: 34 },
-  { day: "Tue", orders: 52 },
-  { day: "Wed", orders: 41 },
-  { day: "Thu", orders: 67 },
-  { day: "Fri", orders: 89 },
-  { day: "Sat", orders: 112 },
-  { day: "Sun", orders: 78 },
-];
-
-const recentActivity = [
-  { id: 1, type: "user", message: "New user Ali Hassan registered", time: "2 min ago", status: "success" },
-  { id: 2, type: "report", message: "Report #045 filed by a buyer", time: "15 min ago", status: "warning" },
-  { id: 3, type: "vendor", message: "Vendor 'Spice Garden' approved", time: "1 hr ago", status: "success" },
-  { id: 4, type: "order", message: "Order #1234 marked as delivered", time: "2 hr ago", status: "success" },
-  { id: 5, type: "report", message: "Food item flagged for review", time: "3 hr ago", status: "error" },
-  { id: 6, type: "user", message: "User Ahmed Khan was blocked", time: "5 hr ago", status: "error" },
-];
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 const StatCard = ({ title, value, change, positive, icon: Icon, color, bg, delay }) => (
@@ -109,12 +71,37 @@ const CustomTooltip = ({ active, payload, label }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const [activeChart, setActiveChart] = useState("users");
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { title: "Total Users",   value: "1,420", change: "+18%", positive: true,  icon: FaUsers,       color: "text-[#3A0519]", bg: "bg-[#3A0519]"   },
-    { title: "Total Vendors", value: "55",    change: "+12%", positive: true,  icon: FaStore,       color: "text-[#e21b70]", bg: "bg-[#e21b70]"   },
-    { title: "Total Orders",  value: "3,781", change: "+24%", positive: true,  icon: FaShoppingBag, color: "text-[#A53860]", bg: "bg-[#A53860]"   },
-    { title: "Revenue (PKR)", value: "95K",   change: "+9%",  positive: true,  icon: FaChartLine,   color: "text-emerald-600",bg: "bg-emerald-500"},
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${BASE}/admin/dashboard/stats`, { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setDashboardData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading || !dashboardData) {
+    return <div className="text-center py-20 text-gray-400 font-medium">Loading Dashboard...</div>;
+  }
+
+  const { stats, userGrowthData, revenueData, ordersData, recentActivity, quickStats } = dashboardData;
+
+  const statCards = [
+    { title: "Total Users",   value: stats.totalUsers?.toLocaleString(), change: "+18%", positive: true,  icon: FaUsers,       color: "text-[#3A0519]", bg: "bg-[#3A0519]"   },
+    { title: "Total Vendors", value: stats.totalVendors?.toLocaleString(),    change: "+12%", positive: true,  icon: FaStore,       color: "text-[#e21b70]", bg: "bg-[#e21b70]"   },
+    { title: "Total Orders",  value: stats.totalOrders?.toLocaleString(), change: "+24%", positive: true,  icon: FaShoppingBag, color: "text-[#A53860]", bg: "bg-[#A53860]"   },
+    { title: "Revenue (PKR)", value: `${(stats.totalRevenue/1000).toFixed(1)}K`,   change: "+9%",  positive: true,  icon: FaChartLine,   color: "text-emerald-600",bg: "bg-emerald-500"},
   ];
 
   return (
@@ -128,7 +115,7 @@ const AdminDashboard = () => {
 
       {/* ── Stat Cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        {stats.map((s, i) => <StatCard key={s.title} {...s} delay={i * 60} />)}
+        {statCards.map((s, i) => <StatCard key={s.title} {...s} delay={i * 60} />)}
       </div>
 
       {/* ── Charts Row ────────────────────────────────────────────── */}
@@ -246,7 +233,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-sm font-semibold text-gray-700">Open Reports</span>
             </div>
-            <span className="text-lg font-black text-amber-500">12</span>
+            <span className="text-lg font-black text-amber-500">{quickStats.openReports}</span>
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-gray-50">
@@ -256,7 +243,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-sm font-semibold text-gray-700">Notifications Sent</span>
             </div>
-            <span className="text-lg font-black text-[#3A0519]">38</span>
+            <span className="text-lg font-black text-[#3A0519]">{quickStats.notificationsSent}</span>
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-gray-50">
@@ -266,7 +253,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-sm font-semibold text-gray-700">Blocked Users</span>
             </div>
-            <span className="text-lg font-black text-red-500">4</span>
+            <span className="text-lg font-black text-red-500">{quickStats.blockedUsers}</span>
           </div>
 
           <div className="flex items-center justify-between py-3">
@@ -276,17 +263,17 @@ const AdminDashboard = () => {
               </div>
               <span className="text-sm font-semibold text-gray-700">Resolved Reports</span>
             </div>
-            <span className="text-lg font-black text-emerald-500">33</span>
+            <span className="text-lg font-black text-emerald-500">{quickStats.resolvedReports}</span>
           </div>
 
           {/* Completion bar */}
           <div className="mt-2 bg-gray-50 rounded-2xl p-4">
             <div className="flex justify-between text-xs font-semibold text-gray-600 mb-2">
               <span>Reports Resolved</span>
-              <span>73%</span>
+              <span>{quickStats.resolutionRate}%</span>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#e21b70] to-[#3A0519] rounded-full" style={{ width: "73%" }} />
+              <div className="h-full bg-gradient-to-r from-[#e21b70] to-[#3A0519] rounded-full" style={{ width: `${quickStats.resolutionRate}%` }} />
             </div>
           </div>
         </div>

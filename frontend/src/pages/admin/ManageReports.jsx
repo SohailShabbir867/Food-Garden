@@ -10,84 +10,22 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
-// ─── Mock Reports Data ────────────────────────────────────────────────────────
-const MOCK_REPORTS = [
-  {
-    id: "RPT-001",
-    type: "Food Item",
-    subject: "Expired food being sold",
-    reportedBy: "Ali Hassan",
-    against: "Spice Garden",
-    date: "2026-08-07",
-    status: "open",
-    description: "The biryani delivered to me was clearly expired. I got food poisoning and want this vendor investigated immediately.",
-  },
-  {
-    id: "RPT-002",
-    type: "User",
-    subject: "Fake reviews being posted",
-    reportedBy: "Sara Khan",
-    against: "user@email.com",
-    date: "2026-08-06",
-    status: "resolved",
-    description: "This user is posting multiple 5-star reviews using different accounts to boost vendor ratings unfairly.",
-  },
-  {
-    id: "RPT-003",
-    type: "Vendor",
-    subject: "Wrong items delivered",
-    reportedBy: "Omar Farooq",
-    against: "Desi Dhaba",
-    date: "2026-08-05",
-    status: "open",
-    description: "I ordered a chicken burger but received a plain bun. The vendor is not responsive to refund requests.",
-  },
-  {
-    id: "RPT-004",
-    type: "Food Item",
-    subject: "Misleading food images",
-    reportedBy: "Fatima Malik",
-    against: "Lahori Bites",
-    date: "2026-08-04",
-    status: "pending",
-    description: "The food images on the menu are completely different from what you actually get. Very misleading.",
-  },
-  {
-    id: "RPT-005",
-    type: "User",
-    subject: "Abusive chat messages",
-    reportedBy: "Bilal Ahmed",
-    against: "user2@email.com",
-    date: "2026-08-03",
-    status: "resolved",
-    description: "This user sent me threatening messages via the chat feature after I left a negative review.",
-  },
-  {
-    id: "RPT-006",
-    type: "Vendor",
-    subject: "Price gouging during Eid",
-    reportedBy: "Aisha Siddiqui",
-    against: "Karachi Eats",
-    date: "2026-08-02",
-    status: "pending",
-    description: "Vendor tripled prices during Eid holidays without any notice. This is price gouging.",
-  },
-];
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
   const styles = {
     open:     "bg-red-100 text-red-600 border-red-200",
-    pending:  "bg-amber-100 text-amber-600 border-amber-200",
+    investigating:  "bg-amber-100 text-amber-600 border-amber-200",
     resolved: "bg-emerald-100 text-emerald-600 border-emerald-200",
   };
   const icons = {
     open:     <FaTimesCircle size={10} />,
-    pending:  <FaClock size={10} />,
+    investigating:  <FaClock size={10} />,
     resolved: <FaCheckCircle size={10} />,
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${styles[status] || styles.pending}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${styles[status] || styles.investigating}`}>
       {icons[status]}
       {status}
     </span>
@@ -97,9 +35,10 @@ const StatusBadge = ({ status }) => {
 // ─── Type Badge ───────────────────────────────────────────────────────────────
 const TypeBadge = ({ type }) => {
   const colors = {
-    "Food Item": "bg-orange-100 text-orange-600",
-    "User":      "bg-violet-100 text-violet-600",
-    "Vendor":    "bg-blue-100 text-blue-600",
+    "food": "bg-orange-100 text-orange-600",
+    "user":      "bg-violet-100 text-violet-600",
+    "vendor":    "bg-blue-100 text-blue-600",
+    "order":    "bg-cyan-100 text-cyan-600",
   };
   return (
     <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${colors[type] || "bg-gray-100 text-gray-600"}`}>
@@ -125,7 +64,7 @@ const ReportModal = ({ report, onClose, onResolve, onDelete }) => {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1">Type</p>
-              <TypeBadge type={report.type} />
+              <TypeBadge type={report.targetType} />
             </div>
             <div>
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1">Status</p>
@@ -133,15 +72,15 @@ const ReportModal = ({ report, onClose, onResolve, onDelete }) => {
             </div>
             <div>
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1">Reported By</p>
-              <p className="font-semibold text-gray-800">{report.reportedBy}</p>
+              <p className="font-semibold text-gray-800">{report.reporterName}</p>
             </div>
             <div>
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1">Against</p>
-              <p className="font-semibold text-gray-800">{report.against}</p>
+              <p className="font-semibold text-gray-800">{report.targetName}</p>
             </div>
             <div>
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1">Date Filed</p>
-              <p className="font-semibold text-gray-800">{report.date}</p>
+              <p className="font-semibold text-gray-800">{new Date(report.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
           <div className="bg-gray-50 rounded-xl p-4">
@@ -170,36 +109,83 @@ const ReportModal = ({ report, onClose, onResolve, onDelete }) => {
   );
 };
 
+import { toast } from "react-toastify";
+import { FaSpinner } from "react-icons/fa";
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 const ManageReports = () => {
-  const [reports, setReports]         = useState(MOCK_REPORTS);
+  const [reports, setReports]         = useState([]);
   const [search, setSearch]           = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedReport, setSelectedReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await fetch(`${BASE}/admin/reports`, { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setReports(data);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch reports");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
 
   const filtered = reports.filter((r) => {
     const matchesSearch =
-      r.subject.toLowerCase().includes(search.toLowerCase()) ||
-      r.reportedBy.toLowerCase().includes(search.toLowerCase()) ||
-      r.against.toLowerCase().includes(search.toLowerCase());
+      r.subject?.toLowerCase().includes(search.toLowerCase()) ||
+      r.reporterName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.targetName?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = filterStatus === "all" || r.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const handleResolve = (id) => {
-    setReports((prev) => prev.map((r) => r.id === id ? { ...r, status: "resolved" } : r));
-    setSelectedReport(null);
+  const handleResolve = async (id) => {
+    try {
+      const res = await fetch(`${BASE}/admin/reports/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: "resolved" }),
+      });
+      if (res.ok) {
+        setReports((prev) => prev.map((r) => r._id === id ? { ...r, status: "resolved" } : r));
+        setSelectedReport(null);
+        toast.success("Report resolved");
+      }
+    } catch (error) {
+      toast.error("Failed to resolve report");
+    }
   };
 
-  const handleDelete = (id) => {
-    setReports((prev) => prev.filter((r) => r.id !== id));
-    setSelectedReport(null);
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to permanently dismiss this report?")) {
+      try {
+        const res = await fetch(`${BASE}/admin/reports/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (res.ok) {
+          setReports((prev) => prev.filter((r) => r._id !== id));
+          setSelectedReport(null);
+          toast.error("Report dismissed");
+        }
+      } catch (error) {
+        toast.error("Failed to dismiss report");
+      }
+    }
   };
 
   const counts = {
     all:      reports.length,
     open:     reports.filter((r) => r.status === "open").length,
-    pending:  reports.filter((r) => r.status === "pending").length,
+    investigating:  reports.filter((r) => r.status === "investigating").length,
     resolved: reports.filter((r) => r.status === "resolved").length,
   };
 
@@ -219,7 +205,7 @@ const ManageReports = () => {
         {[
           { label: "All Reports", value: "all", count: counts.all, color: "border-gray-300 text-gray-700", active: "border-gray-900 bg-gray-900 text-white" },
           { label: "Open",        value: "open",     count: counts.open,     color: "border-red-200 text-red-600",     active: "border-red-500 bg-red-50 text-red-600" },
-          { label: "Pending",     value: "pending",  count: counts.pending,  color: "border-amber-200 text-amber-600", active: "border-amber-500 bg-amber-50 text-amber-600" },
+          { label: "Investigating",     value: "investigating",  count: counts.investigating,  color: "border-amber-200 text-amber-600", active: "border-amber-500 bg-amber-50 text-amber-600" },
           { label: "Resolved",    value: "resolved", count: counts.resolved, color: "border-emerald-200 text-emerald-600", active: "border-emerald-500 bg-emerald-50 text-emerald-600" },
         ].map((tab) => (
           <button
@@ -268,7 +254,13 @@ const ManageReports = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-16 text-gray-400 font-medium">
+                    <FaSpinner className="animate-spin inline mr-2" /> Loading reports...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-16 text-gray-400 font-medium">
                     No reports found.
@@ -276,13 +268,13 @@ const ManageReports = () => {
                 </tr>
               ) : (
                 filtered.map((report) => (
-                  <tr key={report.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-5 py-4 font-mono text-xs font-bold text-gray-400">{report.id}</td>
-                    <td className="px-5 py-4"><TypeBadge type={report.type} /></td>
+                  <tr key={report._id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-5 py-4 font-mono text-xs font-bold text-gray-400">{report.reportNumber}</td>
+                    <td className="px-5 py-4"><TypeBadge type={report.targetType} /></td>
                     <td className="px-5 py-4 font-semibold text-gray-800 max-w-[180px] truncate">{report.subject}</td>
-                    <td className="px-5 py-4 text-gray-600 hidden md:table-cell">{report.reportedBy}</td>
-                    <td className="px-5 py-4 text-gray-600 hidden lg:table-cell">{report.against}</td>
-                    <td className="px-5 py-4 text-gray-400 text-xs hidden sm:table-cell">{report.date}</td>
+                    <td className="px-5 py-4 text-gray-600 hidden md:table-cell">{report.reporterName}</td>
+                    <td className="px-5 py-4 text-gray-600 hidden lg:table-cell">{report.targetName}</td>
+                    <td className="px-5 py-4 text-gray-400 text-xs hidden sm:table-cell">{new Date(report.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-4"><StatusBadge status={report.status} /></td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
@@ -295,7 +287,7 @@ const ManageReports = () => {
                         </button>
                         {report.status !== "resolved" && (
                           <button
-                            onClick={() => handleResolve(report.id)}
+                            onClick={() => handleResolve(report._id)}
                             title="Mark Resolved"
                             className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-200 transition-colors"
                           >
@@ -303,7 +295,7 @@ const ManageReports = () => {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(report.id)}
+                          onClick={() => handleDelete(report._id)}
                           title="Dismiss Report"
                           className="w-8 h-8 bg-red-100 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors"
                         >

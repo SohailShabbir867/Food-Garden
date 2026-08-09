@@ -1,17 +1,11 @@
-import React, { useState } from "react";
-import { FaUtensils, FaSearch, FaTrash, FaCheckCircle, FaStore, FaEyeSlash, FaEye } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaUtensils, FaSearch, FaTrash, FaCheckCircle, FaStore, FaEyeSlash, FaEye, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const MOCK_FOODS = [
-  { id: "F-101", name: "Chicken Biryani", vendor: "Spice Garden", price: 450, category: "Pakistani", status: "active",  image: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-  { id: "F-102", name: "Zinger Burger",   vendor: "Lahori Bites", price: 350, category: "Fast Food", status: "blocked", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-  { id: "F-103", name: "Mutton Karahi",   vendor: "Desi Dhaba",   price: 1200,category: "Pakistani", status: "active",  image: "https://images.unsplash.com/photo-1603496987351-f84a3ba5ee3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-  { id: "F-104", name: "Margherita Pizza",vendor: "Pizza Hut",    price: 900, category: "Italian",   status: "active",  image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-  { id: "F-105", name: "Spicy Shawarma",  vendor: "Spice Garden", price: 250, category: "Fast Food", status: "active",  image: "https://images.unsplash.com/photo-1528736235302-52922df5c122?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-];
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-const StatusBadge = ({ status }) => {
-  return status === "active" ? (
+const StatusBadge = ({ isAvailable }) => {
+  return isAvailable ? (
     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
       <FaEye size={10} /> Visible
     </span>
@@ -23,30 +17,70 @@ const StatusBadge = ({ status }) => {
 };
 
 const ManageFoods = () => {
-  const [foods, setFoods] = useState(MOCK_FOODS);
+  const [foods, setFoods] = useState([]);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const handleToggleBlock = (id, currentStatus) => {
-    const newStatus = currentStatus === "active" ? "blocked" : "active";
-    setFoods(foods.map(f => f.id === id ? { ...f, status: newStatus } : f));
-    if(newStatus === 'blocked') {
-      toast.warn("Food item hidden from public menu.");
-    } else {
-      toast.success("Food item is now visible.");
+  const fetchFoods = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BASE}/admin/foods`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch foods");
+      const data = await res.json();
+      setFoods(data);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    fetchFoods();
+  }, []);
+
+  const handleToggleBlock = async (id, currentIsAvailable) => {
+    try {
+      const res = await fetch(`${BASE}/admin/foods/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update food status");
+      
+      setFoods(foods.map(f => f._id === id ? { ...f, isAvailable: !currentIsAvailable } : f));
+      if(currentIsAvailable) {
+        toast.warn("Food item hidden from public menu.");
+      } else {
+        toast.success("Food item is now visible.");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to permanently delete this food item?")) {
-      setFoods(foods.filter(f => f.id !== id));
-      toast.error("Food item deleted.");
+      try {
+        const res = await fetch(`${BASE}/admin/foods/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to delete food item");
+        
+        setFoods(foods.filter(f => f._id !== id));
+        toast.error("Food item deleted.");
+      } catch (error) {
+        toast.error(error.message);
+      }
     }
   };
 
   const filteredFoods = foods.filter((f) => {
-    const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase()) || f.vendor.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === "all" || f.status === filterStatus;
+    const vendorName = f.vendor?.storeName || "Unknown Vendor";
+    const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase()) || vendorName.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = filterStatus === "all" || (filterStatus === "active" ? f.isAvailable : !f.isAvailable);
     return matchesSearch && matchesStatus;
   });
 
@@ -101,29 +135,35 @@ const ManageFoods = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredFoods.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-16 text-gray-400 font-medium">
+                    <FaSpinner className="animate-spin inline mr-2" /> Loading foods...
+                  </td>
+                </tr>
+              ) : filteredFoods.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16 text-gray-400 font-medium">No food items found.</td>
                 </tr>
               ) : (
                 filteredFoods.map((food) => (
-                  <tr key={food.id} className="hover:bg-gray-50/80 transition-colors group">
+                  <tr key={food._id} className="hover:bg-gray-50/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <img 
-                          src={food.image} 
+                          src={food.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"} 
                           alt={food.name} 
                           className="w-12 h-12 rounded-xl object-cover border border-gray-200 shadow-sm"
                         />
                         <div>
                           <p className="font-bold text-gray-900 text-base">{food.name}</p>
-                          <p className="text-xs text-gray-400 font-mono mt-0.5">{food.id}</p>
+                          <p className="text-xs text-gray-400 font-mono mt-0.5">{food._id.slice(-6).toUpperCase()}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                        <FaStore size={10} /> {food.vendor}
+                        <FaStore size={10} /> {food.vendor?.storeName || "Unknown"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-500 font-medium hidden sm:table-cell">
@@ -133,23 +173,23 @@ const ManageFoods = () => {
                       <span className="font-black text-gray-900">Rs. {food.price}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge status={food.status} />
+                      <StatusBadge isAvailable={food.isAvailable} />
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => handleToggleBlock(food.id, food.status)}
-                          title={food.status === 'active' ? "Hide Item" : "Show Item"}
+                          onClick={() => handleToggleBlock(food._id, food.isAvailable)}
+                          title={food.isAvailable ? "Hide Item" : "Show Item"}
                           className={`p-2 rounded-lg font-bold transition-colors ${
-                            food.status === 'active' 
+                            food.isAvailable
                               ? "bg-amber-100 text-amber-600 hover:bg-amber-200" 
                               : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
                           }`}
                         >
-                          {food.status === 'active' ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                          {food.isAvailable ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
                         </button>
                         <button
-                          onClick={() => handleDelete(food.id)}
+                          onClick={() => handleDelete(food._id)}
                           title="Delete Item"
                           className="p-2 rounded-lg font-bold bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
                         >
