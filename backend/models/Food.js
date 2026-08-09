@@ -13,6 +13,10 @@ const foodSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    images: {
+      type: [String],
+      default: [],
+    },
     price: {
       type: Number,
       required: [true, "Price is required"],
@@ -45,6 +49,18 @@ const foodSchema = new mongoose.Schema(
     salesCount: {
       type: Number,
       default: 0,
+    },
+    spiceLevels: {
+      type: [{ label: String, priceExtra: { type: Number, default: 0 } }],
+      default: [],
+    },
+    addOns: {
+      type: [{ label: String, price: { type: Number, default: 0 } }],
+      default: [],
+    },
+    tags: {
+      type: [String],
+      default: [],
     },
   },
   { timestamps: true }

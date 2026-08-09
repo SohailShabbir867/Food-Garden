@@ -133,7 +133,7 @@ const getVendorMenu = asyncHandler(async (req, res) => {
 const addVendorFood = asyncHandler(async (req, res) => {
   const vendor = await getVendorForUser(req.user);
 
-  const { title, description, price, category, image, isAvailable } = req.body;
+  const { title, description, price, category, image, images, spiceLevels, addOns, tags, isAvailable } = req.body;
 
   if (!title || price === undefined || price === null || Number(price) < 0 || Number.isNaN(Number(price))) {
     res.status(400);
@@ -146,6 +146,10 @@ const addVendorFood = asyncHandler(async (req, res) => {
     price: Number(price),
     category: category || "Others",
     image: image || "",
+    images: Array.isArray(images) ? images.filter(Boolean) : [],
+    spiceLevels: Array.isArray(spiceLevels) ? spiceLevels : [],
+    addOns: Array.isArray(addOns) ? addOns : [],
+    tags: Array.isArray(tags) ? tags : [],
     isAvailable: isAvailable !== undefined ? isAvailable === true || isAvailable === "true" : true,
     vendor: vendor._id,
     vendorName: vendor.storeName,
@@ -168,7 +172,7 @@ const updateVendorFood = asyncHandler(async (req, res) => {
     throw new Error("Food item not found or not owned by this vendor");
   }
 
-  const { title, description, price, category, image, isAvailable } = req.body;
+  const { title, description, price, category, image, images, spiceLevels, addOns, tags, isAvailable } = req.body;
 
   if (title !== undefined) food.title = title;
   if (description !== undefined) food.description = description;
@@ -182,6 +186,10 @@ const updateVendorFood = asyncHandler(async (req, res) => {
   }
   if (category !== undefined) food.category = category;
   if (image !== undefined) food.image = image;
+  if (images !== undefined) food.images = Array.isArray(images) ? images.filter(Boolean) : [];
+  if (spiceLevels !== undefined) food.spiceLevels = Array.isArray(spiceLevels) ? spiceLevels : [];
+  if (addOns !== undefined) food.addOns = Array.isArray(addOns) ? addOns : [];
+  if (tags !== undefined) food.tags = Array.isArray(tags) ? tags : [];
   if (isAvailable !== undefined) food.isAvailable = isAvailable === true || isAvailable === "true";
 
   await food.save();
