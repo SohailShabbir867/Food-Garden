@@ -8,7 +8,6 @@ const cookieParser = require("cookie-parser");
 const { Server } = require("socket.io");
 
 const connectDB = require("./config/db");
-const seedDatabase = require("./utils/seeder");
 require("./config/nodemailer");
 
 const authRoutes = require("./routes/authRoutes");
@@ -16,6 +15,8 @@ const chatRoutes = require("./routes/chatRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const foodRoutes = require("./routes/foodRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 const chatSocket = require("./socket/chatSocket");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
@@ -36,6 +37,8 @@ app.use("/api/chats", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/foods", foodRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -43,7 +46,6 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
-  await seedDatabase();
   server.listen(PORT, () => {
     console.log(`Food Garden API running on http://localhost:${PORT}`);
   });
