@@ -22,9 +22,9 @@ const HeroSection = () => (
       </motion.span>
 
       <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }} className="max-w-4xl text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl">
-        Discover Pakistan&apos;s Finest{' '}
-        <span className="text-[#e21b70]">
-          <Typewriter words={['Flavors', 'Burgers', 'Pizza', 'Rolls']} loop={0} cursor cursorStyle="|" typeSpeed={90} deleteSpeed={55} delaySpeed={1600} />
+        Discover Pakistan&apos;s Finest&nbsp;
+        <span className="text-[#e21b70] whitespace-nowrap">
+          <Typewriter words={['Flavors', 'Recipes', 'Deals', 'Burgers']} loop={0} cursor cursorStyle="|" typeSpeed={90} deleteSpeed={55} delaySpeed={1600} />
         </span>
         <br /> Delivered to Your Doorstep
       </motion.h1>
