@@ -3,49 +3,23 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
-// Read Environment Dummy Credentials
-export const DEMO_CREDENTIALS = {
-  admin: {
-    email: import.meta.env.VITE_ADMIN_EMAIL || "admin@foodgarden.com",
-    password: import.meta.env.VITE_ADMIN_PASSWORD || "admin123",
-    name: "Super Admin",
-    role: "admin",
-    phone: "0333-0000000",
-    avatar: "https://ui-avatars.com/api/?name=Super+Admin&background=1a0009&color=fff",
-  },
-  vendor: {
-    email: import.meta.env.VITE_VENDOR_EMAIL || "vendor@foodgarden.com",
-    password: import.meta.env.VITE_VENDOR_PASSWORD || "vendor123",
-    name: "Burger Hub Kitchen",
-    role: "vendor",
-    phone: "0301-9876543",
-    avatar: "https://ui-avatars.com/api/?name=Burger+Hub&background=3A0519&color=fff",
-  },
-  buyer: {
-    email: import.meta.env.VITE_BUYER_EMAIL || "buyer@foodgarden.com",
-    password: import.meta.env.VITE_BUYER_PASSWORD || "buyer123",
-    name: "Sohail Shabbir",
-    role: "buyer",
-    phone: "0300-1234567",
-    avatar: "https://ui-avatars.com/api/?name=Sohail+Shabbir&background=e21b70&color=fff",
-  },
-};
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const AuthProvider = ({ children }) => {
-  // Load saved user session from localStorage
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem("food_garden_user");
-      return savedUser ? JSON.parse(savedUser) : DEMO_CREDENTIALS.buyer; // Default logged in as buyer for smooth UX
-    } catch (e) {
-      return DEMO_CREDENTIALS.buyer;
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
     }
   });
 
-  // Sync session changes to localStorage
+  const [loading, setLoading] = useState(false);
+
+  // Sync user to localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem("food_garden_user", JSON.stringify(user));
@@ -54,89 +28,56 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Login handler with .env & localStorage credentials check
-  const login = ({ email, password, role }) => {
-    const inputEmail = email?.trim().toLowerCase();
-
-    // 1. Check against .env Demo credentials
-    if (inputEmail === DEMO_CREDENTIALS.admin.email.toLowerCase()) {
-      const loggedUser = { ...DEMO_CREDENTIALS.admin };
-      setUser(loggedUser);
-      return { success: true, role: "admin", user: loggedUser };
-    }
-
-    if (inputEmail === DEMO_CREDENTIALS.vendor.email.toLowerCase()) {
-      const loggedUser = { ...DEMO_CREDENTIALS.vendor };
-      setUser(loggedUser);
-      return { success: true, role: "vendor", user: loggedUser };
-    }
-
-    if (inputEmail === DEMO_CREDENTIALS.buyer.email.toLowerCase()) {
-      const loggedUser = { ...DEMO_CREDENTIALS.buyer };
-      setUser(loggedUser);
-      return { success: true, role: "buyer", user: loggedUser };
-    }
-
-    // 2. Check saved registered users in localStorage
+  // ── Login (calls real backend) ────────────────────────────
+  const login = async ({ email, password }) => {
+    setLoading(true);
     try {
-      const registeredUsers = JSON.parse(localStorage.getItem("food_garden_registered_users") || "[]");
-      const foundUser = registeredUsers.find((u) => u.email.toLowerCase() === inputEmail);
-      if (foundUser) {
-        setUser(foundUser);
-        return { success: true, role: foundUser.role, user: foundUser };
+      const res = await fetch(`${BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: email?.trim().toLowerCase(), password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { success: false, message: data.message || "Login failed" };
       }
-    } catch (e) {
-      console.error(e);
+
+      const loggedUser = { ...data.user };
+      setUser(loggedUser);
+
+      // Persist JWT token so vendorApi / adminApi service layer can attach it
+      if (data.token) {
+        localStorage.setItem("food_garden_token", data.token);
+      }
+
+      return { success: true, role: loggedUser.role, user: loggedUser };
+    } catch {
+      return { success: false, message: "Network error. Is the server running?" };
+    } finally {
+      setLoading(false);
     }
-
-    // 3. Fallback: determine role by user input or email keywords
-    let userRole = role || "buyer";
-    if (inputEmail?.includes("admin")) userRole = "admin";
-    else if (inputEmail?.includes("vendor")) userRole = "vendor";
-
-    const customUser = {
-      id: Date.now(),
-      name: inputEmail.split("@")[0] || "User",
-      email: inputEmail,
-      role: userRole,
-      phone: "0300-0000000",
-      avatar: `https://ui-avatars.com/api/?name=${inputEmail}&background=e21b70&color=fff`,
-    };
-
-    setUser(customUser);
-    return { success: true, role: userRole, user: customUser };
   };
 
-  // One-click quick login for demo roles
-  const loginAsDemoRole = (roleKey) => {
-    const demoUser = DEMO_CREDENTIALS[roleKey] || DEMO_CREDENTIALS.buyer;
-    setUser(demoUser);
-    return { success: true, role: demoUser.role, user: demoUser };
-  };
-
-  const logout = () => {
+  // ── Logout ────────────────────────────────────────────────
+  const logout = async () => {
+    try {
+      await fetch(`${BASE}/auth/logout`, { method: "POST", credentials: "include" });
+    } catch {
+      // Ignore network errors on logout
+    }
     setUser(null);
     localStorage.removeItem("food_garden_user");
+    localStorage.removeItem("food_garden_token");
   };
 
+  // ── Update local profile state ─────────────────────────────
   const updateProfile = (updatedData) => {
     if (!user) return { success: false, message: "No user logged in." };
-    
     const newUserState = { ...user, ...updatedData };
     setUser(newUserState);
-    
-    // Also try to update the "registered users" array if the user exists there
-    try {
-      const registeredUsers = JSON.parse(localStorage.getItem("food_garden_registered_users") || "[]");
-      const userIndex = registeredUsers.findIndex(u => u.email === user.email);
-      if (userIndex !== -1) {
-        registeredUsers[userIndex] = { ...registeredUsers[userIndex], ...updatedData };
-        localStorage.setItem("food_garden_registered_users", JSON.stringify(registeredUsers));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    
     return { success: true, message: "Profile updated successfully." };
   };
 
@@ -150,14 +91,13 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         login,
-        loginAsDemoRole,
         logout,
         updateProfile,
         isAuthenticated,
         isAdmin,
         isVendor,
         isBuyer,
-        DEMO_CREDENTIALS,
+        loading,
       }}
     >
       {children}
