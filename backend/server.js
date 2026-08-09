@@ -5,6 +5,7 @@ const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const morgan = require("morgan");
 const { Server } = require("socket.io");
 
 const connectDB = require("./config/db");
@@ -13,7 +14,7 @@ require("./config/nodemailer");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const vendorRoutes = require("./routes/vendorRoutes");
+const createVendorRoutes = require("./routes/vendorRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const foodRoutes = require("./routes/foodRoutes");
 const orderRoutes = require("./routes/orderRoutes");
@@ -29,8 +30,9 @@ const clientOrigin = [
 ].filter(Boolean);
 
 app.use(cors({ origin: clientOrigin, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
+app.use(morgan("dev")); // Added Morgan for API logging
 
 const io = new Server(server, { cors: { origin: clientOrigin, credentials: true } });
 chatSocket(io);
@@ -39,7 +41,7 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/vendor", vendorRoutes);
+app.use("/api/vendor", createVendorRoutes(io));
 app.use("/api/contact", contactRoutes);
 app.use("/api/foods", foodRoutes);
 app.use("/api/orders", orderRoutes);
