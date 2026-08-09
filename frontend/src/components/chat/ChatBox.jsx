@@ -8,17 +8,11 @@ import {
   RiUser3Line,
   RiArrowLeftLine,
 } from "react-icons/ri";
+import socket from "../../socket";
 
 const DK = "#3A0519";
 const ACC = "#e21b70";
 const CR = "#F7F4EF";
-
-const AUTO_RESPONSES = [
-  "Hello! Thank you for reaching out to us. How can we help with your food order today? 😊",
-  "We are preparing your order with extra care! It will be ready shortly. 🍽️",
-  "Got your message! We'll make sure to note your preferences for the kitchen. 👌",
-  "Your food is on the way with our rider! You can track the order live. 🛵💨",
-];
 
 const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
   const [messages, setMessages] = useState([]);
@@ -31,7 +25,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
 
   const messagesEndRef = useRef(null);
 
-  const convId = conversation?.conversationId || conversation?.id;
+  const convId = conversation?.conversationId || conversation?.id || conversation?._id;
   const otherUser = conversation?.otherUser || {
     name: conversation?.name || "User",
     avatar: conversation?.avatar,
@@ -43,7 +37,39 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  /* ── Load initial conversation messages ───────────────── */
+  /* ── Socket.io Two-Way Realtime Communication ───────── */
+  useEffect(() => {
+    if (!convId) return;
+
+    // Join room for this chat thread
+    socket.emit("joinChat", convId);
+
+    // Listen for incoming real-time messages from other party
+    const handleIncomingMessage = (msg) => {
+      setMessages((prev) => {
+        // Prevent duplicates
+        if (prev.some((m) => m._id === msg._id)) return prev;
+        return [...prev, msg];
+      });
+      scrollToBottom();
+    };
+
+    // Listen for real-time typing indicators
+    const handleUserTyping = ({ isTyping }) => {
+      setOtherIsTyping(Boolean(isTyping));
+    };
+
+    socket.on("newMessage", handleIncomingMessage);
+    socket.on("userTyping", handleUserTyping);
+
+    return () => {
+      socket.off("newMessage", handleIncomingMessage);
+      socket.off("userTyping", handleUserTyping);
+      socket.emit("leaveChat", convId);
+    };
+  }, [convId, scrollToBottom]);
+
+  /* ── Load conversation messages ───────────────────────── */
   useEffect(() => {
     if (conversation?.messages) {
       setMessages(conversation.messages);
@@ -59,7 +85,15 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
     scrollToBottom();
   }, [messages, otherIsTyping, scrollToBottom]);
 
-  /* ── Send message ─────────────────────────────────────── */
+  /* ── Handle Typing Status Signal ────────────────────── */
+  const handleInputChange = (val) => {
+    setText(val);
+    if (convId) {
+      socket.emit("typing", { chatId: convId, isTyping: val.length > 0 });
+    }
+  };
+
+  /* ── Send message with Socket.io real-time relay ─────── */
   const handleSend = async (e) => {
     e?.preventDefault();
     const trimmed = text.trim();
@@ -78,7 +112,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
       }
 
       const newMsg = {
-        _id: Date.now(),
+        _id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         from: "buyer",
         isOwn: true,
         text: trimmed,
@@ -88,36 +122,24 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
         read: false,
       };
 
+      // 1. Update local state
       setMessages((prev) => [...prev, newMsg]);
       setText("");
       setSelectedImage(null);
 
+      // 2. Stop typing indicator
+      if (convId) {
+        socket.emit("typing", { chatId: convId, isTyping: false });
+      }
+
+      // 3. Emit real-time two-way Socket event
+      if (convId) {
+        socket.emit("sendMessage", { chatId: convId, message: newMsg });
+      }
+
       if (onMessageSent) {
         onMessageSent(newMsg);
       }
-
-      // Simulate vendor typing & response
-      setOtherIsTyping(true);
-      setTimeout(() => {
-        setOtherIsTyping(false);
-        const replyText =
-          AUTO_RESPONSES[Math.floor(Math.random() * AUTO_RESPONSES.length)];
-
-        const vendorReply = {
-          _id: Date.now() + 1,
-          from: "vendor",
-          isOwn: false,
-          text: replyText,
-          message: replyText,
-          createdAt: new Date().toISOString(),
-          read: true,
-        };
-
-        setMessages((prev) => [...prev, vendorReply]);
-        if (onMessageSent) {
-          onMessageSent(vendorReply);
-        }
-      }, 1500);
     } catch (err) {
       toast.error("Failed to send message.");
     } finally {
@@ -154,7 +176,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: CR }}>
-      {/* ── Chat Header Navbar (Matching Image 2) ─────────── */}
+      {/* ── Chat Header Navbar ─────────────────────────────── */}
       <div
         className="flex items-center gap-3 px-4 py-3.5 border-b shrink-0 shadow-xs"
         style={{ backgroundColor: DK, borderColor: "rgba(255,255,255,0.08)" }}
@@ -264,7 +286,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
       {/* ── Input Bar ─────────────────────────────────────── */}
       <ChatInput
         value={text}
-        onChange={setText}
+        onChange={handleInputChange}
         onSend={handleSend}
         selectedImage={selectedImage}
         onImageSelect={setSelectedImage}
