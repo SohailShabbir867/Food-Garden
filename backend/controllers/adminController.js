@@ -7,6 +7,7 @@ const Order = require("../models/Order");
 const Report = require("../models/Report");
 const Notification = require("../models/Notification");
 const Contact = require("../models/Contact");
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ── 1. Dashboard Aggregate Statistics ───────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
@@ -137,8 +138,8 @@ exports.getUsers = async (req, res) => {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" } },
+        { email: { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" } },
       ];
     }
     if (role && role !== "all") query.role = role;

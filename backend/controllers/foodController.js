@@ -1,4 +1,5 @@
 const Food = require("../models/Food");
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const listFoods = async (req, res, next) => {
   try {
@@ -6,7 +7,7 @@ const listFoods = async (req, res, next) => {
     const filter = { isAvailable: true };
     if (category && category !== "All") filter.category = category;
     if (search) {
-      const expression = { $regex: search, $options: "i" };
+      const expression = { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" };
       filter.$or = [{ title: expression }, { category: expression }, { vendorName: expression }];
     }
 

@@ -11,8 +11,9 @@ const createOrder = async (req, res, next) => {
     }
 
     const ids = items.map((item) => item.foodId || item.id);
-    const foods = await Food.find({ _id: { $in: ids }, isAvailable: true }).populate("vendor", "storeName");
-    if (foods.length !== ids.length) return res.status(400).json({ message: "One or more cart items are unavailable" });
+    const uniqueIds = [...new Set(ids.map(String))];
+    const foods = await Food.find({ _id: { $in: uniqueIds }, isAvailable: true }).populate("vendor", "storeName");
+    if (foods.length !== uniqueIds.length) return res.status(400).json({ message: "One or more cart items are unavailable" });
 
     const byId = new Map(foods.map((food) => [food._id.toString(), food]));
     const orderItems = items.map((item) => {

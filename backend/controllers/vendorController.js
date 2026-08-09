@@ -5,6 +5,7 @@ const asyncHandler = require("express-async-handler");
 const Vendor = require("../models/Vendor");
 const Food = require("../models/Food");
 const Order = require("../models/Order");
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: find the Vendor document linked to the currently logged-in user.
@@ -118,7 +119,7 @@ const getVendorMenu = asyncHandler(async (req, res) => {
   if (category && category !== "All") filter.category = category;
   if (available === "true") filter.isAvailable = true;
   if (available === "false") filter.isAvailable = false;
-  if (search) filter.title = { $regex: search, $options: "i" };
+  if (search) filter.title = { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" };
 
   const foods = await Food.find(filter).sort({ createdAt: -1 });
 

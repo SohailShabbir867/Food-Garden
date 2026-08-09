@@ -1,9 +1,13 @@
 // backend/controllers/authController.js
 
 const User = require("../models/User");
+const crypto = require("crypto");
 const generateOtp = require("../utils/generateOtp");
 const generateToken = require("../utils/generateToken");
 const { sendSignupOtpEmail, sendPasswordResetOtpEmail } = require("../utils/sendEmail");
+
+const hashOtp = (otp) => crypto.createHash("sha256").update(String(otp)).digest("hex");
+const normaliseEmail = (email) => (typeof email === "string" ? email.trim().toLowerCase() : "");
 
 // Shape a user for API responses — never send back password/otp fields.
 const publicUser = (user) => ({
@@ -21,10 +25,15 @@ const publicUser = (user) => ({
 // ─────────────────────────────────────────────────────────────────
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, restaurantName } = req.body;
+    const { name, password, role, restaurantName } = req.body;
+    const email = normaliseEmail(req.body.email);
 
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email || !password) {
       return res.status(400).json({ message: "Name, email and password are required" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
     }
 
     const existing = await User.findOne({ email });
@@ -50,7 +59,7 @@ const register = async (req, res, next) => {
       existing.password = password; // pre-save hook re-hashes it
       existing.role = resolvedRole;
       existing.restaurantName = restaurantName;
-      existing.otp = otp;
+      existing.otp = hashOtp(otp);
       existing.otpExpiry = expiry;
       user = await existing.save();
     } else {
@@ -60,7 +69,7 @@ const register = async (req, res, next) => {
         password,
         role: resolvedRole,
         restaurantName,
-        otp,
+        otp: hashOtp(otp),
         otpExpiry: expiry,
       });
     }
@@ -82,7 +91,8 @@ const register = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────
 const verifyOtp = async (req, res, next) => {
   try {
-    const { email, otp } = req.body;
+    const email = normaliseEmail(req.body.email);
+    const { otp } = req.body;
 
     const user = await User.findOne({ email }).select("+otp +otpExpiry");
     if (!user) {
@@ -93,7 +103,7 @@ const verifyOtp = async (req, res, next) => {
       return res.status(400).json({ message: "This account is already verified" });
     }
 
-    if (!user.otp || user.otp !== otp) {
+    if (!user.otp || !otp || user.otp !== hashOtp(otp)) {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
@@ -106,11 +116,10 @@ const verifyOtp = async (req, res, next) => {
     user.otpExpiry = undefined;
     await user.save();
 
-    const token = generateToken(res, user._id);
+    generateToken(res, user._id);
 
     res.json({
       message: "Email verified successfully",
-      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -124,7 +133,7 @@ const verifyOtp = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────
 const resendOtp = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const email = normaliseEmail(req.body.email);
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -135,7 +144,7 @@ const resendOtp = async (req, res, next) => {
     }
 
     const { otp, expiry } = generateOtp();
-    user.otp = otp;
+    user.otp = hashOtp(otp);
     user.otpExpiry = expiry;
     await user.save();
 
@@ -152,7 +161,8 @@ const resendOtp = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const email = normaliseEmail(req.body.email);
+    const { password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
@@ -185,11 +195,10 @@ const login = async (req, res, next) => {
       await user.save();
     }
 
-    const token = generateToken(res, user._id);
+    generateToken(res, user._id);
 
     res.json({
       message: "Logged in successfully",
-      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -204,12 +213,12 @@ const login = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────
 const forgotPassword = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const email = normaliseEmail(req.body.email);
     const user = await User.findOne({ email });
 
     if (user) {
       const { otp, expiry } = generateOtp();
-      user.resetOtp = otp;
+      user.resetOtp = hashOtp(otp);
       user.resetOtpExpiry = expiry;
       await user.save();
       await sendPasswordResetOtpEmail(user.email, user.name, otp);
@@ -228,14 +237,15 @@ const forgotPassword = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────
 const resetPassword = async (req, res, next) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const email = normaliseEmail(req.body.email);
+    const { otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ message: "Email, code and new password are required" });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "New password must be at least 8 characters" });
     }
 
     const user = await User.findOne({ email }).select("+resetOtp +resetOtpExpiry");
@@ -243,7 +253,7 @@ const resetPassword = async (req, res, next) => {
       return res.status(404).json({ message: "No account found for this email" });
     }
 
-    if (!user.resetOtp || user.resetOtp !== otp) {
+    if (!user.resetOtp || user.resetOtp !== hashOtp(otp)) {
       return res.status(400).json({ message: "Invalid reset code" });
     }
 
