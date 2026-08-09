@@ -245,16 +245,6 @@ const Navbar = () => {
                             <FaTachometerAlt size={12} /> Dashboard
                           </Link>
                         )}
-                        {(!user || user?.role === "buyer") && (
-                          <>
-                            <Link to="/orders" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
-                              <FaTruck size={12} /> Track Live Order
-                            </Link>
-                            <Link to="/my-orders" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
-                              <FaShoppingBag size={12} /> Reorder History
-                            </Link>
-                          </>
-                        )}
                         <Link to={user?.role === "admin" ? "/admin/profile" : user?.role === "vendor" ? "/vendor/profile" : "/user/profile"} onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition text-sm">
                           <FaUser size={12} /> Profile
                         </Link>
@@ -369,16 +359,6 @@ const Navbar = () => {
                       <Link to={getDashboardLink()} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
                         <FaTachometerAlt size={12} /> Dashboard
                       </Link>
-                    )}
-                    {user?.role === 'buyer' && (
-                      <>
-                        <Link to="/orders" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
-                          <FaTruck size={12} /> Track Live Order
-                        </Link>
-                        <Link to="/my-orders" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2 text-gray-300 hover:text-white transition text-sm px-1">
-                          <FaShoppingBag size={12} /> Reorder History
-                        </Link>
-                      </>
                     )}
                     <button onClick={handleLogout} className="flex items-center gap-2 text-red-400 hover:text-red-300 transition text-sm px-1">
                       <FaSignOutAlt size={12} /> Logout

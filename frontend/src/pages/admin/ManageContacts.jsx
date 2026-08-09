@@ -1,142 +1,141 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   RiMailLine,
   RiSearchLine,
   RiCheckDoubleLine,
   RiReplyLine,
   RiSendPlaneLine,
-  RiUser3Line,
   RiMenuLine,
   RiRefreshLine,
   RiCheckLine,
 } from "react-icons/ri";
+import { FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const DK = "#3A0519";
 const ACC = "#e21b70";
 const CR = "#F7F4EF";
-
-const MOCK_MESSAGES = [
-  {
-    id: "M-001",
-    name: "Sohail Shabbir",
-    email: "sohail@example.com",
-    subject: "Issue with my recent order",
-    message: "Hello, I haven't received my order yet. Can you please check?",
-    status: "unread",
-    date: "2026-08-08 10:30 AM",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-    replies: [],
-  },
-  {
-    id: "M-002",
-    name: "Ali Hassan",
-    email: "ali@example.com",
-    subject: "Vendor Registration query",
-    message: "I want to become a vendor but the form is throwing an error.",
-    status: "read",
-    date: "2026-08-07 02:15 PM",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-    replies: [],
-  },
-  {
-    id: "M-003",
-    name: "Spice Garden",
-    email: "spice@vendor.com",
-    subject: "Menu update pending",
-    message: "I updated my menu items but they are not reflecting on the public page.",
-    status: "replied",
-    date: "2026-08-06 09:00 AM",
-    avatar: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=150",
-    replies: [
-      {
-        id: "r1",
-        text: "Thanks for bringing this to our attention. We have refreshed your vendor menu on the public page!",
-        date: "2026-08-06 09:15 AM",
-      },
-    ],
-  },
-];
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const ManageContacts = () => {
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [messages, setMessages] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState(MOCK_MESSAGES[0].id);
+  const [selectedId, setSelectedId] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const selectedMessage = messages.find((m) => m.id === selectedId);
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BASE}/admin/contacts`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch contact messages");
+      const data = await res.json();
+      setMessages(data);
+      if (data.length > 0 && !selectedId) {
+        setSelectedId(data[0]._id);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const selectedMessage = messages.find((m) => m._id === selectedId);
 
   const filteredMessages = messages.filter(
     (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.subject.toLowerCase().includes(search.toLowerCase())
+      (m.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (m.subject || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleMarkAsRead = (id) => {
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === id && m.status === "unread" ? { ...m, status: "read" } : m
-      )
-    );
+  const handleMarkAsRead = async (id) => {
+    const target = messages.find((m) => m._id === id);
+    if (!target || target.status !== "unread") return;
+
+    try {
+      const res = await fetch(`${BASE}/admin/contacts/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: "read" }),
+      });
+      if (res.ok) {
+        setMessages((prev) =>
+          prev.map((m) => (m._id === id ? { ...m, status: "read" } : m))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+    }
   };
 
-  const toggleStatus = (id) => {
-    setMessages((prev) =>
-      prev.map((m) => {
-        if (m.id === id) {
-          const nextStatus =
-            m.status === "replied"
-              ? "read"
-              : m.status === "read"
-              ? "unread"
-              : "replied";
-          toast.info(`Status updated to ${nextStatus.toUpperCase()}`, {
-            autoClose: 1200,
-          });
-          return { ...m, status: nextStatus };
-        }
-        return m;
-      })
-    );
+  const toggleStatus = async (id) => {
+    const target = messages.find((m) => m._id === id);
+    if (!target) return;
+
+    const nextStatus =
+      target.status === "replied"
+        ? "read"
+        : target.status === "read"
+        ? "unread"
+        : "replied";
+
+    try {
+      const res = await fetch(`${BASE}/admin/contacts/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+
+      setMessages((prev) =>
+        prev.map((m) => (m._id === id ? { ...m, status: nextStatus } : m))
+      );
+      toast.info(`Status updated to ${nextStatus.toUpperCase()}`, { autoClose: 1200 });
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleReply = (e) => {
+  const handleReply = async (e) => {
     e.preventDefault();
     const trimmed = replyText.trim();
     if (!trimmed || !selectedMessage) return;
 
-    const newReply = {
-      id: Date.now().toString(),
-      text: trimmed,
-      date: new Date().toLocaleString([], {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+    try {
+      const res = await fetch(`${BASE}/admin/contacts/${selectedMessage._id}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ replyText: trimmed }),
+      });
 
-    setMessages((prev) =>
-      prev.map((m) => {
-        if (m.id === selectedMessage.id) {
-          return {
-            ...m,
-            status: "replied",
-            replies: [...(m.replies || []), newReply],
-          };
-        }
-        return m;
-      })
-    );
+      if (!res.ok) throw new Error("Failed to send reply");
+      const data = await res.json();
 
-    toast.success("Reply sent successfully via email!", { autoClose: 2000 });
-    setReplyText("");
+      setMessages((prev) =>
+        prev.map((m) => (m._id === selectedMessage._id ? data.contact : m))
+      );
+
+      toast.success("Reply sent successfully!", { autoClose: 2000 });
+      setReplyText("");
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
+
+  const getAvatar = (name) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=3A0519&color=ffffff`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-      {/* ── Top Header Bar (Matching Image 2) ───────────── */}
+      {/* ── Top Header Bar ───────────── */}
       <div className="flex items-center gap-3 mb-5">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-xs shrink-0"
@@ -154,7 +153,7 @@ const ManageContacts = () => {
         </div>
       </div>
 
-      {/* ── Main Frame Container (Matching Image 2) ──────── */}
+      {/* ── Main Frame Container ──────── */}
       <div
         className="bg-white rounded-2xl border overflow-hidden shadow-xs"
         style={{ borderColor: "#E8E2D9", height: "76vh" }}
@@ -188,26 +187,31 @@ const ManageContacts = () => {
 
             {/* List Body */}
             <div className="flex-1 overflow-y-auto">
-              {filteredMessages.length === 0 ? (
+              {loading ? (
+                <div className="p-8 text-center text-gray-400 text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
+                  <FaSpinner className="animate-spin" /> Loading messages...
+                </div>
+              ) : filteredMessages.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-xs sm:text-sm font-medium">
-                  No messages found.
+                  No contact messages found in database.
                 </div>
               ) : (
                 filteredMessages.map((msg) => {
-                  const isActive = selectedMessage?.id === msg.id;
+                  const isActive = selectedMessage?._id === msg._id;
                   const lastReply =
                     msg.replies && msg.replies.length > 0
                       ? msg.replies[msg.replies.length - 1]
                       : null;
+                  const formattedDate = new Date(msg.createdAt).toLocaleDateString();
 
                   return (
                     <button
-                      key={msg.id}
+                      key={msg._id}
                       onClick={() => {
-                        setSelectedId(msg.id);
-                        handleMarkAsRead(msg.id);
+                        setSelectedId(msg._id);
+                        handleMarkAsRead(msg._id);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-b border-gray-100"
+                      className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-b border-gray-100 cursor-pointer"
                       style={{
                         backgroundColor: isActive ? `${DK}0A` : "transparent",
                         borderLeft: isActive
@@ -217,7 +221,7 @@ const ManageContacts = () => {
                     >
                       <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-1 ring-gray-200">
                         <img
-                          src={msg.avatar}
+                          src={getAvatar(msg.name)}
                           alt={msg.name}
                           className="w-full h-full object-cover"
                         />
@@ -232,7 +236,7 @@ const ManageContacts = () => {
                             {msg.name}
                           </p>
                           <span className="text-[10px] text-gray-400 shrink-0 ml-2 font-normal">
-                            {msg.date.split(" ")[0]}
+                            {formattedDate}
                           </span>
                         </div>
                         <p className="text-xs font-semibold text-gray-800 truncate mb-1">
@@ -254,7 +258,7 @@ const ManageContacts = () => {
                           )}
                           {msg.status === "replied" && (
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
-                              <RiReplyLine size={9} /> REPLIED ({msg.replies.length})
+                              <RiReplyLine size={9} /> REPLIED ({(msg.replies || []).length})
                             </span>
                           )}
                           {msg.status === "read" && (
@@ -294,7 +298,7 @@ const ManageContacts = () => {
                     </button>
                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-1 ring-white/20">
                       <img
-                        src={selectedMessage.avatar}
+                        src={getAvatar(selectedMessage.name)}
                         alt={selectedMessage.name}
                         className="w-full h-full object-cover"
                       />
@@ -312,7 +316,7 @@ const ManageContacts = () => {
                   <div className="flex items-center gap-2">
                     {/* Status Toggle Button */}
                     <button
-                      onClick={() => toggleStatus(selectedMessage.id)}
+                      onClick={() => toggleStatus(selectedMessage._id)}
                       className="text-[11px] font-semibold px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
                       title="Click to toggle message status"
                     >
@@ -321,7 +325,7 @@ const ManageContacts = () => {
                     </button>
 
                     <span className="hidden sm:inline-block text-[11px] text-white/70 font-medium px-3 py-1 rounded-full bg-white/10 border border-white/15">
-                      {selectedMessage.date}
+                      {new Date(selectedMessage.createdAt).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -335,7 +339,7 @@ const ManageContacts = () => {
                         {selectedMessage.name}
                       </span>
                       <span className="text-[10px] text-gray-400">
-                        {selectedMessage.date}
+                        {new Date(selectedMessage.createdAt).toLocaleString()}
                       </span>
                     </div>
                     <div className="bg-white rounded-2xl rounded-tl-xs p-4 border border-[#E8E2D9] shadow-2xs max-w-[85%]">
@@ -356,13 +360,13 @@ const ManageContacts = () => {
                         <div>
                           <p className="font-bold">Reply Status: Active</p>
                           <p className="text-[11px] text-emerald-600">
-                            {selectedMessage.replies.length} response(s) sent. You can send further messages below.
+                            {(selectedMessage.replies || []).length} response(s) sent. You can send further messages below.
                           </p>
                         </div>
                       </div>
                       <button
-                        onClick={() => toggleStatus(selectedMessage.id)}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold transition-all"
+                        onClick={() => toggleStatus(selectedMessage._id)}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold transition-all cursor-pointer"
                       >
                         Reset Status
                       </button>
@@ -371,11 +375,11 @@ const ManageContacts = () => {
 
                   {/* Sent Replies Feed */}
                   {selectedMessage.replies &&
-                    selectedMessage.replies.map((reply) => (
-                      <div key={reply.id} className="flex flex-col items-end my-3">
+                    selectedMessage.replies.map((reply, idx) => (
+                      <div key={reply._id || idx} className="flex flex-col items-end my-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className="text-[10px] text-gray-400 font-medium">
-                            {reply.date}
+                            {new Date(reply.sentAt).toLocaleString()}
                           </span>
                           <span className="text-xs font-bold text-[#e21b70]">
                             Support Admin (You)
@@ -388,7 +392,7 @@ const ManageContacts = () => {
                           <p>{reply.text}</p>
                         </div>
                         <div className="flex items-center gap-1 mt-0.5 text-[10px] text-emerald-600 font-medium">
-                          <span>Sent via Email & Chat</span>
+                          <span>Sent via Email & System</span>
                           <RiCheckLine className="text-xs" />
                         </div>
                       </div>
