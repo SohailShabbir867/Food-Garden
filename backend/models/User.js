@@ -28,6 +28,23 @@ const userSchema = new mongoose.Schema(
       enum: ["buyer", "vendor", "admin"],
       default: "buyer",
     },
+    status: {
+      type: String,
+      enum: ["active", "blocked", "pending"],
+      default: "active",
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
+    city: {
+      type: String,
+      default: "Lahore",
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
 
     // ── Email verification (signup OTP) ──────────────────────
     isVerified: {
@@ -53,7 +70,7 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    // ── Vendor-specific (kept optional so buyer signup stays simple) ─
+    // ── Vendor-specific ──────────────────────────────────────
     restaurantName: {
       type: String,
       trim: true,

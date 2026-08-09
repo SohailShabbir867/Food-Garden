@@ -11,14 +11,19 @@ const cookieParser = require("cookie-parser");
 const { Server } = require("socket.io");
 
 const connectDB = require("./config/db");
+const seedDatabase = require("./utils/seeder");
 require("./config/nodemailer"); // verifies Gmail creds on boot (logs success/failure)
 
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const chatSocket = require("./socket/chatSocket");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
-connectDB();
+// Connect MongoDB & Seed Initial Data
+connectDB().then(() => {
+  seedDatabase();
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +51,7 @@ chatSocket(io);
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ── Error handling (must be last) ────────────────────────────
 app.use(notFound);
