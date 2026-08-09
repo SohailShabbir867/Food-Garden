@@ -5,6 +5,9 @@ const Chat = require("../models/Chat");
 const Message = require("../models/Message");
 const User = require("../models/User");
 
+const isParticipant = (chat, userId) =>
+  chat.buyer.equals(userId) || chat.seller.equals(userId);
+
 // GET /api/chats -> list all chat threads for the logged-in user
 const getMyChats = async (req, res) => {
   try {
@@ -26,6 +29,10 @@ const getMyChats = async (req, res) => {
 const getChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: "Chat thread not found" });
+    if (!isParticipant(chat, req.user._id)) return res.status(403).json({ message: "Forbidden" });
+
     const messages = await Message.find({ chat: chatId })
       .populate("sender", "name email avatar")
       .sort({ createdAt: 1 });
@@ -45,6 +52,15 @@ const createChat = async (req, res) => {
     }
 
     const userId = req.user._id;
+
+    if (userId.equals(recipientId)) {
+      return res.status(400).json({ message: "You cannot start a chat with yourself" });
+    }
+
+    const recipient = await User.findById(recipientId);
+    if (!recipient || recipient.status === "blocked") {
+      return res.status(404).json({ message: "Recipient is not available" });
+    }
 
     // Check if chat thread already exists
     let chat = await Chat.findOne({
@@ -84,6 +100,9 @@ const sendMessage = async (req, res) => {
     const chat = await Chat.findById(chatId);
     if (!chat) {
       return res.status(404).json({ message: "Chat thread not found" });
+    }
+    if (!isParticipant(chat, req.user._id)) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     const message = await Message.create({

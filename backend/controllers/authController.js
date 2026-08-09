@@ -171,6 +171,10 @@ const login = async (req, res, next) => {
       });
     }
 
+    if (user.status === "blocked") {
+      return res.status(403).json({ message: "This account has been blocked. Please contact support." });
+    }
+
     // Safety net: if this is the designated admin email but the stored role
     // hasn't caught up (e.g. account existed before ADMIN_EMAIL was set), fix it now.
     const isAdminEmail =
@@ -228,6 +232,10 @@ const resetPassword = async (req, res, next) => {
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ message: "Email, code and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters" });
     }
 
     const user = await User.findOne({ email }).select("+resetOtp +resetOtpExpiry");

@@ -11,6 +11,9 @@ const SOCKET_URL =
 
 export const socket = io(SOCKET_URL, {
   autoConnect: true,
+  auth: (callback) => {
+    callback({ token: localStorage.getItem("food_garden_token") || undefined });
+  },
   transports: ["websocket", "polling"],
   withCredentials: true,
 });

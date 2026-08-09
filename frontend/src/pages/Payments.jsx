@@ -102,7 +102,7 @@ const PaymentPage = () => {
       totalAmount: grandTotal,
       paymentMethod: form.paymentMethod,
       address: `${form.address}, ${form.area ? form.area + ", " : ""}${form.city}`,
-      customerName: form.fullName,
+      customerName: form.name,
       phone: form.phone,
     };
 

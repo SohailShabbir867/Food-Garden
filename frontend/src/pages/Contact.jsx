@@ -7,6 +7,8 @@ import {
 
 import ContactImage from "../assets/slider/signup.jpg";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const Contact = () => {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,15 +27,23 @@ const Contact = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock backend submission
-    await new Promise((res) => setTimeout(res, 900));
-    
-    setStatus("Message sent successfully! We will get back to you soon.");
-    setForm({ name: "", email: "", subject: "Order Support", message: "" });
-    setLoading(false);
-    
-    // Clear success message after 3 seconds
-    setTimeout(() => setStatus(""), 3000);
+    try {
+      const response = await fetch(`${API_BASE}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "Unable to send your message");
+
+      setStatus(data.message || "Message sent successfully! We will get back to you soon.");
+      setForm({ name: "", email: "", subject: "Order Support", message: "" });
+      setTimeout(() => setStatus(""), 3000);
+    } catch (error) {
+      setStatus(error.message || "Unable to send your message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

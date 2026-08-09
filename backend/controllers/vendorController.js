@@ -135,7 +135,7 @@ const addVendorFood = asyncHandler(async (req, res) => {
 
   const { title, description, price, category, image, isAvailable } = req.body;
 
-  if (!title || !price) {
+  if (!title || price === undefined || price === null || Number(price) < 0 || Number.isNaN(Number(price))) {
     res.status(400);
     throw new Error("Title and price are required");
   }
@@ -146,7 +146,7 @@ const addVendorFood = asyncHandler(async (req, res) => {
     price: Number(price),
     category: category || "Others",
     image: image || "",
-    isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true,
+    isAvailable: isAvailable !== undefined ? isAvailable === true || isAvailable === "true" : true,
     vendor: vendor._id,
     vendorName: vendor.storeName,
   });
@@ -172,10 +172,17 @@ const updateVendorFood = asyncHandler(async (req, res) => {
 
   if (title !== undefined) food.title = title;
   if (description !== undefined) food.description = description;
-  if (price !== undefined) food.price = Number(price);
+  if (price !== undefined) {
+    const numericPrice = Number(price);
+    if (Number.isNaN(numericPrice) || numericPrice < 0) {
+      res.status(400);
+      throw new Error("Price must be a valid non-negative number");
+    }
+    food.price = numericPrice;
+  }
   if (category !== undefined) food.category = category;
   if (image !== undefined) food.image = image;
-  if (isAvailable !== undefined) food.isAvailable = Boolean(isAvailable);
+  if (isAvailable !== undefined) food.isAvailable = isAvailable === true || isAvailable === "true";
 
   await food.save();
 

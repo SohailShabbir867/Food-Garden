@@ -1,57 +1,59 @@
-// backend/socket/chatSocket.js
-// Real-time two-way text chat and support ticket signaling over Socket.io.
+const jwt = require("jsonwebtoken");
+const Chat = require("../models/Chat");
+const User = require("../models/User");
+
+const getToken = (socket) => {
+  if (socket.handshake.auth?.token) return socket.handshake.auth.token;
+  const cookieHeader = socket.handshake.headers.cookie || "";
+  const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+const canAccessChat = async (chatId, userId) => {
+  const chat = await Chat.findById(chatId).select("buyer seller");
+  return Boolean(chat && (chat.buyer.equals(userId) || chat.seller.equals(userId)));
+};
 
 module.exports = function chatSocket(io) {
+  io.use(async (socket, next) => {
+    try {
+      const token = getToken(socket);
+      if (!token) return next(new Error("Authentication required"));
+
+      const { id } = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(id).select("_id role status");
+      if (!user || user.status === "blocked") return next(new Error("Authentication required"));
+
+      socket.user = user;
+      next();
+    } catch {
+      next(new Error("Authentication required"));
+    }
+  });
+
   io.on("connection", (socket) => {
-    console.log("⚡ Socket connected:", socket.id);
-
-    // Join a personal room for direct user notifications
     socket.on("joinUser", (userId) => {
-      if (userId) {
-        socket.join(userId.toString());
-        console.log(`Socket ${socket.id} joined user room: ${userId}`);
-      }
+      if (userId && socket.user._id.equals(userId)) socket.join(socket.user._id.toString());
     });
 
-    // Join a specific chat thread room
-    socket.on("joinChat", (chatId) => {
-      if (chatId) {
-        socket.join(chatId.toString());
-        console.log(`Socket ${socket.id} joined chat room: ${chatId}`);
-      }
+    socket.on("joinChat", async (chatId) => {
+      if (chatId && (await canAccessChat(chatId, socket.user._id))) socket.join(chatId.toString());
     });
 
-    // Leave a chat room
     socket.on("leaveChat", (chatId) => {
-      if (chatId) {
-        socket.leave(chatId.toString());
-        console.log(`Socket ${socket.id} left chat room: ${chatId}`);
-      }
+      if (chatId) socket.leave(chatId.toString());
     });
 
-    // Relay a new message to everyone in the chat thread in real-time
-    socket.on("sendMessage", ({ chatId, message }) => {
-      if (chatId && message) {
+    socket.on("sendMessage", async ({ chatId, message }) => {
+      if (chatId && message && (await canAccessChat(chatId, socket.user._id))) {
         io.to(chatId.toString()).emit("newMessage", message);
       }
     });
 
-    // Relay contact support ticket reply
-    socket.on("sendContactReply", ({ ticketId, reply }) => {
-      if (ticketId && reply) {
-        io.to(`contact_${ticketId}`).emit("newContactReply", reply);
+    socket.on("typing", async ({ chatId, isTyping }) => {
+      if (chatId && (await canAccessChat(chatId, socket.user._id))) {
+        socket.to(chatId.toString()).emit("userTyping", { userId: socket.user._id, isTyping: Boolean(isTyping) });
       }
-    });
-
-    // Real-time typing indicators
-    socket.on("typing", ({ chatId, userId, isTyping }) => {
-      if (chatId) {
-        socket.to(chatId.toString()).emit("userTyping", { userId, isTyping });
-      }
-    });
-
-    socket.on("disconnect", () => {
-      console.log("🔌 Socket disconnected:", socket.id);
     });
   });
 };
