@@ -272,6 +272,16 @@ const updateVendorOrderStatus = asyncHandler(async (req, res) => {
   order.status = status;
   await order.save();
 
+  // Emit real-time order status update to the buyer via Socket.IO
+  if (req.io && order.buyer) {
+    req.io.to(order.buyer.toString()).emit("orderStatusUpdated", {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      vendorName: order.vendorName,
+    });
+  }
+
   res.json({
     message: `Order #${order.orderNumber} updated to "${status}"`,
     order,

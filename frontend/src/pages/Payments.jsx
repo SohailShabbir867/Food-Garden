@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,6 +29,7 @@ import { createOrder } from "../services/api";
 
 const PaymentPage = () => {
   const { cartItems, subtotal, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Form states
@@ -39,12 +41,24 @@ const PaymentPage = () => {
     area: "",
     address: "",
     instructions: "",
-    paymentMethod: "jazzcash", // 'jazzcash' | 'easypaisa' | 'bank' | 'cod' | 'card'
+    paymentMethod: "jazzcash",
     transactionId: "",
     cardNumber: "",
     cardExpiry: "",
     cardCvc: "",
   });
+
+  // Auto-fill contact details from the logged-in user
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        name: user.name || "",
+        phone: user.phone || "",
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
 
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -102,7 +116,6 @@ const PaymentPage = () => {
     } finally {
       setLoading(false);
     }
-    toast.success("Order placed successfully! 🎉");
   };
 
   const copyToClipboard = (text, label) => {
