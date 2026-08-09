@@ -111,9 +111,9 @@ const AdminDashboard = () => {
   const [activeChart, setActiveChart] = useState("users");
 
   const stats = [
-    { title: "Total Users",   value: "1,420", change: "+18%", positive: true,  icon: FaUsers,       color: "text-violet-600", bg: "bg-violet-500" },
-    { title: "Total Vendors", value: "55",    change: "+12%", positive: true,  icon: FaStore,       color: "text-pink-600",   bg: "bg-[#e21b70]"  },
-    { title: "Total Orders",  value: "3,781", change: "+24%", positive: true,  icon: FaShoppingBag, color: "text-blue-600",   bg: "bg-blue-500"   },
+    { title: "Total Users",   value: "1,420", change: "+18%", positive: true,  icon: FaUsers,       color: "text-[#3A0519]", bg: "bg-[#3A0519]"   },
+    { title: "Total Vendors", value: "55",    change: "+12%", positive: true,  icon: FaStore,       color: "text-[#e21b70]", bg: "bg-[#e21b70]"   },
+    { title: "Total Orders",  value: "3,781", change: "+24%", positive: true,  icon: FaShoppingBag, color: "text-[#A53860]", bg: "bg-[#A53860]"   },
     { title: "Revenue (PKR)", value: "95K",   change: "+9%",  positive: true,  icon: FaChartLine,   color: "text-emerald-600",bg: "bg-emerald-500"},
   ];
 
