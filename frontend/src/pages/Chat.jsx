@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   RiMessage3Line,
@@ -7,6 +7,7 @@ import {
 } from "react-icons/ri";
 import ChatList from "../components/chat/ChatList";
 import ChatBox from "../components/chat/ChatBox";
+import { useAuth } from "../context/AuthContext";
 
 const DK = "#3A0519";
 const ACC = "#e21b70";
@@ -129,24 +130,85 @@ const INITIAL_CONVERSATIONS = [
 
 const Chat = () => {
   const [searchParams] = useSearchParams();
-  const initialVendorName = searchParams.get("vendorName");
-
+  const { clearUnreadChatCount } = useAuth();
   const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
   const [activeConv, setActiveConv] = useState(() => {
+    const initialVendorName = searchParams.get("vendorName");
     if (initialVendorName) {
       const match = INITIAL_CONVERSATIONS.find((c) =>
         c.otherUser.name.toLowerCase().includes(initialVendorName.toLowerCase())
       );
       if (match) return match;
     }
-    // Default to first conversation on desktop
     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
       return INITIAL_CONVERSATIONS[0];
     }
     return null;
   });
-
   const [search, setSearch] = useState("");
+
+  // Clear unread navbar badge when opening Chat page
+  useEffect(() => {
+    if (clearUnreadChatCount) clearUnreadChatCount();
+  }, [clearUnreadChatCount]);
+
+  // Handle incoming query params: ?vendorName=...&orderId=...
+  useEffect(() => {
+    const vName = searchParams.get("vendorName");
+    const ordId = searchParams.get("orderId");
+    if (!vName) return;
+
+    setConversations((prev) => {
+      const match = prev.find((c) =>
+        (c.otherUser?.name || "").toLowerCase().includes(vName.toLowerCase())
+      );
+      if (match) {
+        setActiveConv(match);
+        return prev;
+      }
+
+      // Create new conversation thread for this vendor
+      const newConv = {
+        conversationId: `conv-v-${Date.now()}`,
+        id: `v-${Date.now()}`,
+        otherUser: {
+          _id: `v-user-${Date.now()}`,
+          name: vName,
+          avatar: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150",
+          role: "Vendor",
+          isOnline: true,
+        },
+        activeOrderNumber: ordId || null,
+        unreadCount: 0,
+        lastTime: "Just now",
+        lastMessage: {
+          text: ordId ? `Question regarding Order #${ordId}` : "Hi! I have a question regarding my order.",
+          message: ordId ? `Question regarding Order #${ordId}` : "Hi! I have a question regarding my order.",
+          from: "buyer",
+          isOwn: true,
+          createdAt: new Date().toISOString(),
+        },
+        messages: [
+          {
+            _id: `msg-init-${Date.now()}`,
+            from: "buyer",
+            isOwn: true,
+            text: ordId
+              ? `Hi ${vName}! I'm tracking my Order #${ordId} and wanted to check with you.`
+              : `Hi ${vName}! I have a question regarding my order.`,
+            message: ordId
+              ? `Hi ${vName}! I'm tracking my Order #${ordId} and wanted to check with you.`
+              : `Hi ${vName}! I have a question regarding my order.`,
+            createdAt: new Date().toISOString(),
+            read: false,
+          },
+        ],
+      };
+
+      setActiveConv(newConv);
+      return [newConv, ...prev];
+    });
+  }, [searchParams]);
 
   /* ── Filtered conversations ──────────────────────────── */
   const filteredConversations = useMemo(() => {
