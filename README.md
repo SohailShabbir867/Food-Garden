@@ -1,4 +1,7 @@
-# Food Garden 🍔
+# Food Garden
+
+Auto-deployment enabled on VPS (`130.210.62.71`).
+ 🍔
 
 A MERN-stack online food ordering and delivery marketplace built for Pakistan — inspired by Foodpanda. Food Garden connects local restaurant/food vendors with buyers through a single platform, with an admin layer to manage and moderate the whole marketplace.
 
