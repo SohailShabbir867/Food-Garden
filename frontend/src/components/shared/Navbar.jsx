@@ -192,37 +192,41 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Chat Icon with Red Notification Badge */}
-          <Link
-            to="/chat"
-            onClick={clearUnreadChatCount}
-            className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group"
-            title="Live Chat Messages"
-          >
-            <FaComments size={19} className="group-hover:text-[#e21b70] transition-colors" />
-            {unreadChatCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-pulse shadow-md border border-white">
-                {unreadChatCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Cart */}
-          <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group">
-            <FaShoppingCart size={18} className="group-hover:text-[#e21b70] transition-colors" />
-            <AnimatePresence>
-              {cartItems?.length > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -top-1 -right-1 bg-[#e21b70] text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
-                >
-                  {cartItems.length}
-                </motion.span>
+          {/* Chat Icon (Only when logged in) */}
+          {isAuthenticated && (
+            <Link
+              to="/chat"
+              onClick={clearUnreadChatCount}
+              className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group"
+              title="Live Chat Messages"
+            >
+              <FaComments size={19} className="group-hover:text-[#e21b70] transition-colors" />
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-pulse shadow-md border border-white">
+                  {unreadChatCount}
+                </span>
               )}
-            </AnimatePresence>
-          </Link>
+            </Link>
+          )}
+
+          {/* Cart Icon (Only when logged in) */}
+          {isAuthenticated && (
+            <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group">
+              <FaShoppingCart size={18} className="group-hover:text-[#e21b70] transition-colors" />
+              <AnimatePresence>
+                {cartItems?.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-1 -right-1 bg-[#e21b70] text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
+                  >
+                    {cartItems.length}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+          )}
 
           {/* Auth (Desktop) */}
           <div className="hidden md:flex items-center gap-2 pl-2 border-l border-white/20">

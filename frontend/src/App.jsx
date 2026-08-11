@@ -35,6 +35,7 @@ import FoodDetail from './pages/FoodDetail';
 import Chat from './pages/Chat';
 import MyOrders from './pages/MyOrders';
 import TrackOrder from './pages/TrackOrder';
+import NotFound from './pages/NotFound';
 
 // ─── Admin Pages ─────────────────────────────────────────────
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -99,15 +100,57 @@ function App() {
               <Route path="/menu" element={<Menu />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/payment" element={<Payment />} />
               <Route path="/food/:id" element={<FoodDetail />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/my-orders" element={<MyOrders />} />
-              <Route path="/orders" element={<TrackOrder />} />
-              <Route path="/track-order" element={<TrackOrder />} />
 
               {/* Protected buyer routes */}
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payment"
+                element={
+                  <ProtectedRoute>
+                    <Payment />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/chat"
+                element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-orders"
+                element={
+                  <ProtectedRoute requiredRole="buyer">
+                    <MyOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute requiredRole="buyer">
+                    <TrackOrder />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/track-order"
+                element={
+                  <ProtectedRoute requiredRole="buyer">
+                    <TrackOrder />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/user/profile"
                 element={
@@ -116,6 +159,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* 404 — Catch-all for MainLayout */}
+              <Route path="*" element={<NotFound />} />
             </Route>
 
             {/* ══════════════════════════════════════════════ */}
@@ -161,10 +207,6 @@ function App() {
             </Route>
 
             {/* ══════════════════════════════════════════════ */}
-            {/*   404 — Catch-all                             */}
-            {/* ══════════════════════════════════════════════ */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-
           </Routes>
         </Router>
       </CartProvider>

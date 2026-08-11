@@ -1,5 +1,8 @@
 import React from "react";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
+import { FaLock, FaShoppingCart } from "react-icons/fa";
 
 // Menu item images
 import Menu1 from "../../assets/menu/Menu1.jpg";
@@ -28,6 +31,7 @@ const menuItems = [
 
 const MenuSection = () => {
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {
@@ -67,12 +71,21 @@ const MenuSection = () => {
               <p className="text-[#3A0519] font-bold mb-3">
                 {formatPKR(item.price)}
               </p>
-              <button
-                onClick={() => addToCart(item)}
-                className="inline-block px-4 py-2 bg-[#e21b70] hover:bg-[#670D2F] text-white rounded-full transition font-medium"
-              >
-                Add to Cart
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => addToCart(item)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#e21b70] hover:bg-[#670D2F] text-white rounded-full transition font-medium text-xs cursor-pointer shadow-md"
+                >
+                  <FaShoppingCart size={11} /> Add to Cart
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-[#3A0519] hover:text-white text-[#3A0519] rounded-full transition font-bold text-xs border border-gray-200 cursor-pointer"
+                >
+                  <FaLock size={10} /> Login to Order
+                </Link>
+              )}
             </div>
           </div>
         ))}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import {
   FaStar,
@@ -15,6 +16,7 @@ import {
   FaRegSquare,
   FaStore,
   FaTag,
+  FaLock,
 } from "react-icons/fa";
 import { fetchFood } from "../services/api";
 
@@ -22,6 +24,7 @@ const FoodDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
 
   const [food, setFood] = useState(null);
   const [loadingFood, setLoadingFood] = useState(true);
@@ -310,24 +313,38 @@ const FoodDetail = () => {
           </div>
 
           {/* ── Action Buttons ── */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleAddToCart}
-              className="flex-1 py-4 bg-[#e21b70] hover:bg-[#c01560] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-[#e21b70]/30 transition-colors"
-            >
-              <FaShoppingCart /> Add to Cart
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleChatVendor}
-              className="flex-1 py-4 bg-[#3A0519] hover:bg-[#1a0009] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-colors"
-            >
-              <FaComments /> Chat with Vendor
-            </motion.button>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleAddToCart}
+                className="flex-1 py-4 bg-[#e21b70] hover:bg-[#c01560] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-[#e21b70]/30 transition-colors"
+              >
+                <FaShoppingCart /> Add to Cart
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleChatVendor}
+                className="flex-1 py-4 bg-[#3A0519] hover:bg-[#1a0009] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-colors"
+              >
+                <FaComments /> Chat with Vendor
+              </motion.button>
+            </div>
+          ) : (
+            <div className="p-5 bg-pink-50/80 border-2 border-pink-200 rounded-2xl text-center space-y-3 shadow-xs">
+              <p className="text-sm font-bold text-[#3A0519]">
+                Please log in to chat with vendor or add items to your cart.
+              </p>
+              <button
+                onClick={() => navigate("/login")}
+                className="px-6 py-3 bg-[#e21b70] hover:bg-pink-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <FaLock size={11} /> Login to Order & Chat
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

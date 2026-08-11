@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCart } from "../context/CartContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaStar,
@@ -13,6 +14,7 @@ import {
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
+  FaLock,
 } from "react-icons/fa";
 import { fetchFoods } from "../services/api";
 import { toast } from "react-toastify";
@@ -32,6 +34,7 @@ const Menu = () => {
   const [loadingFoods, setLoadingFoods] = useState(true);
 
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const menuGridRef = useRef(null);
 
@@ -320,12 +323,22 @@ const Menu = () => {
                       >
                         Details <FaArrowRight size={10} />
                       </button>
-                      <button
-                        onClick={(e) => handleQuickAdd(food, e)}
-                        className="py-3 px-3 bg-[#e21b70] hover:bg-pink-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-[#e21b70]/25 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
-                      >
-                        <FaShoppingCart size={11} /> Quick Add
-                      </button>
+                      {isAuthenticated ? (
+                        <button
+                          onClick={(e) => handleQuickAdd(food, e)}
+                          className="py-3 px-3 bg-[#e21b70] hover:bg-pink-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-[#e21b70]/25 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                        >
+                          <FaShoppingCart size={11} /> Quick Add
+                        </button>
+                      ) : (
+                        <Link
+                          to="/login"
+                          onClick={(e) => e.stopPropagation()}
+                          className="py-3 px-3 bg-gray-100 hover:bg-[#3A0519] text-[#3A0519] hover:text-white text-xs font-extrabold rounded-xl transition-colors flex items-center justify-center gap-1.5 border border-gray-200 cursor-pointer"
+                        >
+                          <FaLock size={10} /> Login to Order
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </motion.div>
