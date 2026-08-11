@@ -2,7 +2,8 @@ import React from "react";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
-import { FaLock, FaShoppingCart } from "react-icons/fa";
+import { FaLock, FaShoppingCart, FaExclamationTriangle } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 // Menu item images
 import Menu1 from "../../assets/menu/Menu1.jpg";
@@ -31,7 +32,19 @@ const menuItems = [
 
 const MenuSection = () => {
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
+  const isOwnItem = (item) => {
+    if (!user || user.role !== "vendor" || !item) return false;
+    const vendorUserId = item.vendorOwnerId || item.vendorId;
+    if (vendorUserId && (vendorUserId === user._id || vendorUserId.toString() === user._id.toString())) {
+      return true;
+    }
+    if (user.restaurantName && item.vendorName) {
+      return user.restaurantName.trim().toLowerCase() === item.vendorName.trim().toLowerCase();
+    }
+    return false;
+  };
 
   const formatPKR = (amount) =>
     new Intl.NumberFormat("en-PK", {
@@ -71,7 +84,15 @@ const MenuSection = () => {
               <p className="text-[#3A0519] font-bold mb-3">
                 {formatPKR(item.price)}
               </p>
-              {isAuthenticated ? (
+              {isOwnItem(item) ? (
+                <button
+                  onClick={() => toast.warning("You cannot order your own food items!")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-50 text-amber-800 rounded-full font-bold text-xs border border-amber-200 cursor-not-allowed"
+                  title="You cannot order your own menu items"
+                >
+                  <FaExclamationTriangle size={11} className="text-amber-600" /> Your Item
+                </button>
+              ) : isAuthenticated ? (
                 <button
                   onClick={() => addToCart(item)}
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#e21b70] hover:bg-[#670D2F] text-white rounded-full transition font-medium text-xs cursor-pointer shadow-md"

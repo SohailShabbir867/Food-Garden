@@ -15,6 +15,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaLock,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { fetchFoods } from "../services/api";
 import { toast } from "react-toastify";
@@ -34,7 +35,7 @@ const Menu = () => {
   const [loadingFoods, setLoadingFoods] = useState(true);
 
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const menuGridRef = useRef(null);
 
@@ -93,8 +94,24 @@ const Menu = () => {
     }
   };
 
+  const isOwnFoodItem = (food) => {
+    if (!user || user.role !== "vendor" || !food) return false;
+    const vendorUserId = food.vendorOwnerId || food.vendorId;
+    if (vendorUserId && (vendorUserId === user._id || vendorUserId.toString() === user._id.toString())) {
+      return true;
+    }
+    if (user.restaurantName && food.vendorName) {
+      return user.restaurantName.trim().toLowerCase() === food.vendorName.trim().toLowerCase();
+    }
+    return false;
+  };
+
   const handleQuickAdd = (food, e) => {
     e.stopPropagation();
+    if (isOwnFoodItem(food)) {
+      toast.warning("You cannot order your own food items!");
+      return;
+    }
     const cartItem = {
       id: food.id,
       name: food.name,
@@ -323,7 +340,18 @@ const Menu = () => {
                       >
                         Details <FaArrowRight size={10} />
                       </button>
-                      {isAuthenticated ? (
+                      {isOwnFoodItem(food) ? (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.warning("You cannot order your own food items!");
+                          }}
+                          className="py-3 px-3 bg-amber-50 text-amber-800 text-xs font-extrabold rounded-xl border border-amber-200 flex items-center justify-center gap-1.5 cursor-not-allowed"
+                          title="You cannot order your own food items"
+                        >
+                          <FaExclamationTriangle size={11} className="text-amber-600" /> Your Item
+                        </span>
+                      ) : isAuthenticated ? (
                         <button
                           onClick={(e) => handleQuickAdd(food, e)}
                           className="py-3 px-3 bg-[#e21b70] hover:bg-pink-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-[#e21b70]/25 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"

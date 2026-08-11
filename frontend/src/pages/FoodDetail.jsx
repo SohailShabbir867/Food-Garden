@@ -17,6 +17,7 @@ import {
   FaStore,
   FaTag,
   FaLock,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { fetchFood } from "../services/api";
 
@@ -24,7 +25,7 @@ const FoodDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [food, setFood] = useState(null);
   const [loadingFood, setLoadingFood] = useState(true);
@@ -80,7 +81,23 @@ const FoodDetail = () => {
   const unitPrice = food.basePrice + spiceExtra + addOnTotal;
   const totalPrice = unitPrice * quantity;
 
+  const isOwnItem = React.useMemo(() => {
+    if (!user || user.role !== "vendor" || !food) return false;
+    const vendorUserId = food.vendorOwnerId || food.vendorId;
+    if (vendorUserId && (vendorUserId === user._id || vendorUserId.toString() === user._id.toString())) {
+      return true;
+    }
+    if (user.restaurantName && food.vendorName) {
+      return user.restaurantName.trim().toLowerCase() === food.vendorName.trim().toLowerCase();
+    }
+    return false;
+  }, [user, food]);
+
   const handleAddToCart = () => {
+    if (isOwnItem) {
+      toast.warning("You cannot order your own food items!");
+      return;
+    }
     const cartItem = {
       id: food.id,
       name: food.name,
@@ -313,7 +330,17 @@ const FoodDetail = () => {
           </div>
 
           {/* ── Action Buttons ── */}
-          {isAuthenticated ? (
+          {isOwnItem ? (
+            <div className="p-5 bg-amber-50 border-2 border-amber-300 rounded-2xl text-center space-y-2 shadow-sm">
+              <div className="flex items-center justify-center gap-2 text-amber-900 font-extrabold text-sm sm:text-base">
+                <FaExclamationTriangle className="text-amber-600 text-lg shrink-0" />
+                <span>You cannot order this item — this is your own food listing!</span>
+              </div>
+              <p className="text-xs sm:text-sm text-amber-700 font-medium">
+                Vendors cannot place orders for items from their own restaurant menu ({food.vendorName}).
+              </p>
+            </div>
+          ) : isAuthenticated ? (
             <div className="flex flex-col sm:flex-row gap-3">
               <motion.button
                 whileHover={{ scale: 1.03 }}
