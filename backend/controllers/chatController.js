@@ -109,6 +109,7 @@ const sendMessage = async (req, res) => {
       chat: chatId,
       sender: req.user._id,
       text: text.trim(),
+      read: false, // explicit — starts as unread
     });
 
     // Update chat last message timestamp
@@ -123,9 +124,36 @@ const sendMessage = async (req, res) => {
   }
 };
 
+// PUT /api/chats/:chatId/read
+// HTTP fallback for marking messages as read (used on page load / refresh).
+// The primary path is the Socket.IO `markRead` event in chatSocket.js;
+// this endpoint ensures read status is persisted even when the socket
+// hasn't connected yet (e.g. slow network on first load).
+const markMessagesRead = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.user._id;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: "Chat not found" });
+    if (!isParticipant(chat, userId)) return res.status(403).json({ message: "Forbidden" });
+
+    // Mark all messages in this chat NOT sent by the current user as read
+    const result = await Message.updateMany(
+      { chat: chatId, sender: { $ne: userId }, read: false },
+      { $set: { read: true } }
+    );
+
+    res.json({ message: "Messages marked as read", updated: result.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to mark messages as read", error: error.message });
+  }
+};
+
 module.exports = {
   getMyChats,
   getChatMessages,
   createChat,
   sendMessage,
+  markMessagesRead,
 };

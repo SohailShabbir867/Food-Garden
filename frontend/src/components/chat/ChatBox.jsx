@@ -14,6 +14,8 @@ const DK = "#3A0519";
 const ACC = "#e21b70";
 const CR = "#F7F4EF";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -37,37 +39,86 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  /* ── Socket.io Two-Way Realtime Communication ───────── */
+  /* ── Mark messages as read via HTTP (page-load fallback) ─
+   *
+   * Called once when the user opens a conversation.  The primary path
+   * (Socket.IO `markRead` event) is also emitted below, but this HTTP
+   * call guarantees persistence even when the socket hasn't handshaked
+   * yet (e.g. slow network, first render).
+   */
+  const httpMarkRead = useCallback(async (chatId) => {
+    if (!chatId) return;
+    try {
+      await fetch(`${BASE}/chats/${chatId}/read`, {
+        method: "PUT",
+        credentials: "include",
+      });
+    } catch {
+      // Silently ignore — the socket path will cover it
+    }
+  }, []);
+
+  /* ── Socket: join room + listeners ─────────────────────── */
   useEffect(() => {
     if (!convId) return;
 
-    // Join room for this chat thread
+    // 1. Join this conversation's socket room
     socket.emit("joinChat", convId);
 
-    // Listen for incoming real-time messages from other party
+    // 2. Emit markRead immediately so any unread messages are marked
+    //    on the backend and the sender's screen flips to green ticks.
+    socket.emit("markRead", { chatId: convId });
+
+    // 3. Also fire HTTP fallback (handles page-load before socket connects)
+    httpMarkRead(convId);
+
+    // ── Incoming new message from the other party ──────────
     const handleIncomingMessage = (msg) => {
       setMessages((prev) => {
-        // Prevent duplicates
         if (prev.some((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
       scrollToBottom();
+
+      // When I receive a new message, immediately mark it as read
+      // (because I am looking at this chat right now).
+      socket.emit("markRead", { chatId: convId });
     };
 
-    // Listen for real-time typing indicators
+    // ── Sent messages turning green (other party read them) ─
+    //
+    // `messagesRead` is broadcast to the whole room when the OTHER person
+    // opens the chat.  We flip ALL of our own sent messages to read:true
+    // so the ticks instantly turn green.
+    //
+    const handleMessagesRead = ({ chatId }) => {
+      if (chatId !== convId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          // Only update messages that are "mine" (isOwn / from=buyer) and unread
+          (m.isOwn || m.from === "buyer") && !m.read
+            ? { ...m, read: true }
+            : m
+        )
+      );
+    };
+
+    // ── Typing indicator ───────────────────────────────────
     const handleUserTyping = ({ isTyping }) => {
       setOtherIsTyping(Boolean(isTyping));
     };
 
     socket.on("newMessage", handleIncomingMessage);
+    socket.on("messagesRead", handleMessagesRead);
     socket.on("userTyping", handleUserTyping);
 
     return () => {
       socket.off("newMessage", handleIncomingMessage);
+      socket.off("messagesRead", handleMessagesRead);
       socket.off("userTyping", handleUserTyping);
       socket.emit("leaveChat", convId);
     };
-  }, [convId, scrollToBottom]);
+  }, [convId, scrollToBottom, httpMarkRead]);
 
   /* ── Load conversation messages ───────────────────────── */
   useEffect(() => {
@@ -93,7 +144,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
     }
   };
 
-  /* ── Send message with Socket.io real-time relay ─────── */
+  /* ── Send message ─────────────────────────────────────── */
   const handleSend = async (e) => {
     e?.preventDefault();
     const trimmed = text.trim();
@@ -119,10 +170,10 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
         message: trimmed,
         imageAttachment: imageAttachmentUrl,
         createdAt: new Date().toISOString(),
-        read: false,
+        read: false, // starts as unread (grey tick)
       };
 
-      // 1. Update local state
+      // 1. Update local state immediately (optimistic)
       setMessages((prev) => [...prev, newMsg]);
       setText("");
       setSelectedImage(null);
@@ -132,7 +183,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
         socket.emit("typing", { chatId: convId, isTyping: false });
       }
 
-      // 3. Emit real-time two-way Socket event
+      // 3. Broadcast to the other party via socket
       if (convId) {
         socket.emit("sendMessage", { chatId: convId, message: newMsg });
       }
@@ -176,7 +227,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: CR }}>
-      {/* ── Chat Header Navbar ─────────────────────────────── */}
+      {/* ── Chat Header ────────────────────────────────────── */}
       <div
         className="flex items-center gap-3 px-4 py-3.5 border-b shrink-0 shadow-xs"
         style={{ backgroundColor: DK, borderColor: "rgba(255,255,255,0.08)" }}
@@ -206,14 +257,14 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
         </div>
 
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 shadow-2xs"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 shadow-xs"
           style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
         >
           <RiUser3Line className="text-base" />
         </div>
       </div>
 
-      {/* ── Messages Scroll Area ─────────────────────────── */}
+      {/* ── Messages Scroll Area ──────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
         {loading ? (
           <div className="flex justify-center py-12">
@@ -246,7 +297,7 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
           ))
         )}
 
-        {/* Typing indicator */}
+        {/* Typing indicator bubbles */}
         {otherIsTyping && (
           <div className="flex items-end gap-2 mt-1">
             <div className="w-7 h-7 shrink-0">
