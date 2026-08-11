@@ -177,6 +177,8 @@ const Menu = () => {
           >
             <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
             <input
+              id="menu-search-input"
+              name="searchQuery"
               type="text"
               placeholder="Search for burgers, pizza, wraps, vendor names..."
               value={searchQuery}
@@ -212,18 +214,17 @@ const Menu = () => {
             >
               <FaUtensils size={12} /> All Categories
             </button>
-            {categories.map((cat) => (
+            {categories.filter((cat) => cat !== "All").map((cat) => (
               <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.name)}
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
                 className={`px-4 sm:px-5 py-2.5 rounded-2xl font-extrabold text-xs sm:text-sm transition-all flex-shrink-0 flex items-center gap-2 cursor-pointer ${
-                  selectedCategory === cat.name
+                  selectedCategory === cat
                     ? "bg-[#e21b70] text-white shadow-lg shadow-[#e21b70]/30"
                     : "bg-gray-100 text-gray-600 hover:bg-pink-50 hover:text-[#e21b70]"
                 }`}
               >
-                <span>{cat.icon}</span>
-                {cat.name}
+                {cat}
               </button>
             ))}
           </div>

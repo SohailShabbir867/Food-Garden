@@ -175,6 +175,8 @@ const Navbar = () => {
                 >
                   <input
                     autoFocus
+                    id="navbar-search-input"
+                    name="searchQuery"
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
