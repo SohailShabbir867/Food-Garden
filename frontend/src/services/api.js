@@ -36,3 +36,4 @@ export const fetchFood = async (id) => normaliseFood((await request(`/foods/${id
 export const createOrder = (body) => request("/orders", { method: "POST", body: JSON.stringify(body) });
 export const fetchMyOrders = () => request("/orders");
 export const fetchMyOrder = (orderNumber) => request(`/orders/${encodeURIComponent(orderNumber)}`);
+export const removeMyOrder = (id) => request(`/orders/${id}`, { method: "DELETE" });

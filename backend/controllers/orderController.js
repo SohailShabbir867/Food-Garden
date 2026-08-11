@@ -52,7 +52,7 @@ const createOrder = async (req, res, next) => {
 
 const getMyOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ buyer: req.user._id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ buyer: req.user._id, hiddenByBuyer: { $ne: true } }).sort({ createdAt: -1 });
     res.json({ orders });
   } catch (error) {
     next(error);
@@ -69,4 +69,18 @@ const getMyOrder = async (req, res, next) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getMyOrder };
+const deleteMyOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, buyer: req.user._id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.hiddenByBuyer = true;
+    await order.save();
+
+    res.json({ message: "Order removed from history successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { createOrder, getMyOrders, getMyOrder, deleteMyOrder };

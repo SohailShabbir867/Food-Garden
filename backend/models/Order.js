@@ -65,6 +65,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    hiddenByBuyer: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
