@@ -238,8 +238,12 @@ const Navbar = () => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-white/10 transition text-white"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#e21b70] flex items-center justify-center text-xs font-bold uppercase shadow">
-                    {user?.name?.[0] || "U"}
+                  <div className="w-8 h-8 rounded-full bg-[#e21b70] flex items-center justify-center text-xs font-bold uppercase shadow overflow-hidden shrink-0 border border-white/20">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt={user?.name || "User"} className="w-full h-full object-cover" />
+                    ) : (
+                      user?.name?.[0] || "U"
+                    )}
                   </div>
                   <span className="text-sm font-medium max-w-[80px] truncate">{user?.name}</span>
                   <motion.div animate={{ rotate: showUserMenu ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -256,9 +260,18 @@ const Navbar = () => {
                       transition={{ duration: 0.15 }}
                       className="absolute right-0 mt-2 w-52 bg-[#2a0312] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-white/10">
-                        <p className="text-white font-semibold text-sm truncate">{user?.name}</p>
-                        <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
+                      <div className="px-4 py-3 border-b border-white/10 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#e21b70] flex items-center justify-center text-xs font-bold uppercase shadow overflow-hidden shrink-0 border border-white/20">
+                          {user?.avatar ? (
+                            <img src={user.avatar} alt={user?.name || "User"} className="w-full h-full object-cover" />
+                          ) : (
+                            user?.name?.[0] || "U"
+                          )}
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-white font-semibold text-sm truncate">{user?.name}</p>
+                          <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
+                        </div>
                       </div>
                       <div className="py-2">
                         {user?.role !== 'buyer' && (
@@ -368,8 +381,12 @@ const Navbar = () => {
                 {isAuthenticated ? (
                   <>
                     <div className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
-                      <div className="w-8 h-8 rounded-full bg-[#e21b70] flex items-center justify-center font-bold text-white uppercase text-sm">
-                        {user?.name?.[0]}
+                      <div className="w-9 h-9 rounded-full bg-[#e21b70] flex items-center justify-center font-bold text-white uppercase text-sm overflow-hidden shrink-0 border border-white/20">
+                        {user?.avatar ? (
+                          <img src={user.avatar} alt={user?.name || "User"} className="w-full h-full object-cover" />
+                        ) : (
+                          user?.name?.[0] || "U"
+                        )}
                       </div>
                       <div>
                         <p className="text-white font-semibold text-sm">{user?.name}</p>
