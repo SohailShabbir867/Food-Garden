@@ -113,7 +113,8 @@ const FoodDetail = () => {
   };
 
   const handleChatVendor = () => {
-    navigate(`/chat?vendorId=${food.vendorId}&vendorName=${encodeURIComponent(food.vendorName)}`);
+    const targetVendorId = food.vendorOwnerId || food.vendorId;
+    navigate(`/chat?vendorId=${targetVendorId}&vendorName=${encodeURIComponent(food.vendorName)}`);
   };
 
   return (

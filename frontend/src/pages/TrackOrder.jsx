@@ -177,7 +177,7 @@ const TrackOrder = () => {
   // Falls back to vendorName search if the owner ID isn't populated.
   const handleMessageVendor = () => {
     if (!order) return;
-    const vendorUserId = order.vendor?.owner?._id || order.vendor?.owner;
+    const vendorUserId = order.vendor?.owner?._id || order.vendor?.owner || order.vendor?._id || order.vendor;
     const vName = order.vendorName || order.vendor?.storeName || "Vendor";
     const ordId = order.orderNumber || "";
 

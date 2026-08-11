@@ -53,13 +53,23 @@ const createChat = async (req, res) => {
 
     const userId = req.user._id;
 
-    if (userId.equals(recipientId)) {
-      return res.status(400).json({ message: "You cannot start a chat with yourself" });
+    let recipient = await User.findById(recipientId);
+    if (!recipient) {
+      const Vendor = require("../models/Vendor");
+      const vendorDoc = await Vendor.findById(recipientId);
+      if (vendorDoc && vendorDoc.owner) {
+        recipient = await User.findById(vendorDoc.owner);
+      }
     }
 
-    const recipient = await User.findById(recipientId);
     if (!recipient || recipient.status === "blocked") {
       return res.status(404).json({ message: "Recipient is not available" });
+    }
+
+    const actualRecipientId = recipient._id;
+
+    if (userId.equals(actualRecipientId)) {
+      return res.status(400).json({ message: "You cannot start a chat with yourself" });
     }
 
     const Order = require("../models/Order");
@@ -78,15 +88,15 @@ const createChat = async (req, res) => {
     // Check if chat thread already exists
     let chat = await Chat.findOne({
       $or: [
-        { buyer: userId, seller: recipientId },
-        { buyer: recipientId, seller: userId },
+        { buyer: userId, seller: actualRecipientId },
+        { buyer: actualRecipientId, seller: userId },
       ],
     });
 
     if (!chat) {
       chat = await Chat.create({
         buyer: userId,
-        seller: recipientId,
+        seller: actualRecipientId,
         orderId: resolvedOrderId,
         lastMessage: "Chat started",
         lastMessageAt: new Date(),

@@ -17,8 +17,15 @@ const CR = "#F7F4EF";
 // Normalise a Chat document from the backend into the shape the UI expects
 const normaliseChat = (chat, currentUserId) => {
   // The "other" person is whoever is NOT me
-  const iAmBuyer = chat.buyer?._id === currentUserId || chat.buyer === currentUserId;
+  const currentIdStr = String(currentUserId || "");
+  const buyerIdStr = String(chat.buyer?._id || chat.buyer || "");
+  const iAmBuyer = buyerIdStr === currentIdStr;
   const otherUser = iAmBuyer ? chat.seller : chat.buyer;
+  const isVendor = otherUser?.role === "vendor";
+
+  const displayName = isVendor
+    ? (otherUser?.restaurantName || otherUser?.storeName || otherUser?.name || "Vendor")
+    : (otherUser?.name || "User");
 
   return {
     conversationId: chat._id,
@@ -26,7 +33,9 @@ const normaliseChat = (chat, currentUserId) => {
     _id: chat._id,
     otherUser: {
       _id: otherUser?._id,
-      name: otherUser?.name || otherUser?.restaurantName || "User",
+      name: displayName,
+      personalName: otherUser?.name,
+      restaurantName: otherUser?.restaurantName || otherUser?.storeName,
       avatar: otherUser?.avatar || null,
       role: otherUser?.role || "User",
     },
