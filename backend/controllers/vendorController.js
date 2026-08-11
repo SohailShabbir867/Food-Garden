@@ -5,7 +5,7 @@ const asyncHandler = require("express-async-handler");
 const Vendor = require("../models/Vendor");
 const Food = require("../models/Food");
 const Order = require("../models/Order");
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegex = require("../utils/escapeRegex");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: find the Vendor document linked to the currently logged-in user.
@@ -306,7 +306,7 @@ const getVendorProfile = asyncHandler(async (req, res) => {
 const updateVendorProfile = asyncHandler(async (req, res) => {
   const vendor = await getVendorForUser(req.user);
 
-  const { storeName, cuisine, phone, city, banner, logo } = req.body;
+  const { storeName, cuisine, phone, city, banner, logo, description } = req.body;
 
   if (storeName !== undefined) vendor.storeName = storeName;
   if (cuisine !== undefined) vendor.cuisine = cuisine;
@@ -314,6 +314,7 @@ const updateVendorProfile = asyncHandler(async (req, res) => {
   if (city !== undefined) vendor.city = city;
   if (banner !== undefined) vendor.banner = banner;
   if (logo !== undefined) vendor.logo = logo;
+  if (description !== undefined) vendor.description = description;
 
   await vendor.save();
 

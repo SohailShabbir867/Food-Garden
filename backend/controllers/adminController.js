@@ -1,4 +1,9 @@
 // backend/controllers/adminController.js
+//
+// All business logic for the Admin dashboard: platform-wide statistics,
+// user/vendor/food/order moderation, support ticket replies, and
+// broadcast notifications. Every route in here is locked to role "admin"
+// by the `protect` + `authorize("admin")` middleware in adminRoutes.js.
 
 const User = require("../models/User");
 const Vendor = require("../models/Vendor");
@@ -7,33 +12,55 @@ const Order = require("../models/Order");
 const Report = require("../models/Report");
 const Notification = require("../models/Notification");
 const Contact = require("../models/Contact");
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegex = require("../utils/escapeRegex");
 
-// ── 1. Dashboard Aggregate Statistics ───────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 1. DASHBOARD OVERVIEW
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/dashboard/stats
+ *
+ * Builds everything the Admin Dashboard's landing page needs in one call:
+ *  - top-line counters (users, vendors, orders, revenue)
+ *  - a 7-month growth chart (users vs vendors)
+ *  - a 7-day orders bar chart
+ *  - a revenue trend chart
+ *  - a merged "recent activity" feed (newest signups, orders, reports)
+ *  - "quick stats" sidebar numbers (open/resolved reports, blocked users, etc.)
+ *
+ * NOTE: the historical chart data (Feb-Jul) is currently hardcoded sample
+ * data — only the most recent month's real counts are blended in. This is
+ * intentional scaffolding so the chart isn't empty on a fresh database;
+ * replace with a real month-by-month aggregation once there's enough
+ * historical data to make it meaningful.
+ */
 exports.getDashboardStats = async (req, res) => {
   try {
+    // ── Top-line counters ───────────────────────────────────────────────
     const totalUsers = await User.countDocuments({ role: { $in: ["buyer", "vendor"] } });
     const totalVendors = await Vendor.countDocuments();
     const totalOrders = await Order.countDocuments();
 
-    // Total revenue from delivered orders
+    // Revenue only counts orders that actually completed (Delivered),
+    // so cancelled/pending orders don't inflate the number.
     const revenueAggregate = await Order.aggregate([
       { $match: { status: "Delivered" } },
       { $group: { _id: null, total: { $sum: "$totalPrice" } } },
     ]);
     const totalRevenue = revenueAggregate.length > 0 ? revenueAggregate[0].total : 0;
 
-    // Quick Stats
+    // ── Quick Stats sidebar ──────────────────────────────────────────────
     const openReports = await Report.countDocuments({ status: { $ne: "resolved" } });
     const resolvedReports = await Report.countDocuments({ status: "resolved" });
     const blockedUsers = await User.countDocuments({ status: "blocked" });
     const notificationsSent = await Notification.countDocuments();
 
     const totalReports = openReports + resolvedReports;
+    // Guard against divide-by-zero when there are no reports yet — default to 100%.
     const resolutionRate = totalReports > 0 ? Math.round((resolvedReports / totalReports) * 100) : 100;
 
-    // Monthly Growth (Last 6 Months)
-    const monthNames = ["Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
+    // ── Chart data (last 6 months trend, blended with live counts) ──────
     const userGrowthData = [
       { month: "Feb", users: 40, vendors: 5 },
       { month: "Mar", users: 80, vendors: 9 },
@@ -64,7 +91,9 @@ exports.getDashboardStats = async (req, res) => {
       { day: "Sun", orders: Math.max(78, totalOrders) },
     ];
 
-    // Recent Activity Stream (from recent users, orders, reports)
+    // ── Recent activity feed ────────────────────────────────────────────
+    // Pull the 3 newest of each entity type, tag them with a `type` so the
+    // frontend can pick an icon, then merge + sort by date and keep the top 6.
     const recentUsers = await User.find().sort({ createdAt: -1 }).limit(3);
     const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(3);
     const recentReports = await Report.find().sort({ createdAt: -1 }).limit(3);
@@ -104,39 +133,38 @@ exports.getDashboardStats = async (req, res) => {
       });
     });
 
+    // Merge all three activity types into one timeline, newest first.
     recentActivity.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({
-      stats: {
-        totalUsers,
-        totalVendors,
-        totalOrders,
-        totalRevenue,
-      },
+      stats: { totalUsers, totalVendors, totalOrders, totalRevenue },
       userGrowthData,
       revenueData,
       ordersData,
       recentActivity: recentActivity.slice(0, 6),
-      quickStats: {
-        openReports,
-        resolvedReports,
-        blockedUsers,
-        notificationsSent,
-        resolutionRate,
-      },
+      quickStats: { openReports, resolvedReports, blockedUsers, notificationsSent, resolutionRate },
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch dashboard stats", error: error.message });
   }
 };
 
-// ── 2. User Management ──────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 2. USER MANAGEMENT
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/users
+ * Lists users with optional filters: ?search=name-or-email&role=buyer&status=active
+ */
 exports.getUsers = async (req, res) => {
   try {
     const { search, role, status } = req.query;
     let query = {};
 
     if (search) {
+      // Case-insensitive partial match on name OR email.
+      // escapeRegex prevents regex-injection from special characters in the search box.
       query.$or = [
         { name: { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" } },
         { email: { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" } },
@@ -152,6 +180,11 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/users/:id/status
+ * Body: { status: "active" | "blocked" | "pending" }
+ * Used by the "block/unblock user" action in ManageUsers.jsx.
+ */
 exports.updateUserStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -168,6 +201,12 @@ exports.updateUserStatus = async (req, res) => {
   }
 };
 
+/**
+ * DELETE /api/admin/users/:id
+ * Permanently deletes a user account. Does NOT cascade-delete their
+ * orders/vendor profile — those stay orphaned by design so order history
+ * isn't lost. Revisit if GDPR-style "right to be forgotten" is needed later.
+ */
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -178,7 +217,15 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// ── 3. Vendor Management ────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 3. VENDOR MANAGEMENT
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/vendors
+ * Lists all vendor storefronts with optional ?status=pending|approved|rejected.
+ * `owner` is populated so the admin table can show the vendor's account name/email.
+ */
 exports.getVendors = async (req, res) => {
   try {
     const { status } = req.query;
@@ -192,6 +239,14 @@ exports.getVendors = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/vendors/:id/status
+ * Body: { status: "pending" | "approved" | "rejected" }
+ *
+ * Approving a vendor also promotes their linked User account's `role` to
+ * "vendor" — this is what unlocks the Vendor portal (/vendor/*) for them
+ * on the frontend, since ProtectedRoute checks req.user.role.
+ */
 exports.updateVendorStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -202,7 +257,7 @@ exports.updateVendorStatus = async (req, res) => {
     vendor.status = status;
     await vendor.save();
 
-    // Also update associated user role if approved
+    // Promote the owning user to the "vendor" role the moment they're approved.
     if (status === "approved" && vendor.owner) {
       await User.findByIdAndUpdate(vendor.owner, { role: "vendor" });
     }
@@ -213,7 +268,15 @@ exports.updateVendorStatus = async (req, res) => {
   }
 };
 
-// ── 4. Food Management ──────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 4. FOOD MANAGEMENT (platform-wide, across all vendors)
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/foods
+ * Every menu item on the platform, regardless of vendor. `vendor` is
+ * populated with just the store name so the table can show "sold by X".
+ */
 exports.getFoods = async (req, res) => {
   try {
     const foods = await Food.find().populate("vendor", "storeName").sort({ createdAt: -1 });
@@ -223,6 +286,11 @@ exports.getFoods = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/foods/:id/status
+ * Flips a food item's availability (used to hide a listing without deleting
+ * it — e.g. while investigating a complaint about it).
+ */
 exports.toggleFoodAvailability = async (req, res) => {
   try {
     const food = await Food.findById(req.params.id);
@@ -237,6 +305,11 @@ exports.toggleFoodAvailability = async (req, res) => {
   }
 };
 
+/**
+ * DELETE /api/admin/foods/:id
+ * Permanently removes a listing (unlike toggleFoodAvailability, this
+ * can't be undone — used for policy-violating items, not routine hiding).
+ */
 exports.deleteFood = async (req, res) => {
   try {
     const food = await Food.findByIdAndDelete(req.params.id);
@@ -248,7 +321,16 @@ exports.deleteFood = async (req, res) => {
   }
 };
 
-// ── 5. Order Management ─────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 5. ORDER MANAGEMENT (platform-wide oversight)
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/orders
+ * All orders across every vendor, optionally filtered by ?status=.
+ * (Vendors only see their own orders via /api/vendor/orders — this is
+ * the platform-wide admin view.)
+ */
 exports.getOrders = async (req, res) => {
   try {
     const { status } = req.query;
@@ -262,6 +344,12 @@ exports.getOrders = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/orders/:id/status
+ * Lets an admin override an order's status directly (e.g. force-cancel a
+ * stuck order). Normal fulfillment updates come from the vendor via
+ * /api/vendor/orders/:id/status instead.
+ */
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -278,7 +366,14 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// ── 6. Report Management ────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 6. REPORT MANAGEMENT (user-submitted complaints/flags)
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/reports
+ * All complaint/flag reports (against a user, vendor, food item, or order).
+ */
 exports.getReports = async (req, res) => {
   try {
     const reports = await Report.find().sort({ createdAt: -1 });
@@ -288,6 +383,12 @@ exports.getReports = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/reports/:id/status
+ * Body: { status?: "open"|"investigating"|"resolved", resolutionNote?: string }
+ * Moves a report through its triage lifecycle and optionally records how
+ * it was resolved.
+ */
 exports.updateReportStatus = async (req, res) => {
   try {
     const { status, resolutionNote } = req.body;
@@ -305,6 +406,10 @@ exports.updateReportStatus = async (req, res) => {
   }
 };
 
+/**
+ * DELETE /api/admin/reports/:id
+ * Permanently removes a report record (e.g. spam/duplicate reports).
+ */
 exports.deleteReport = async (req, res) => {
   try {
     const report = await Report.findByIdAndDelete(req.params.id);
@@ -316,7 +421,15 @@ exports.deleteReport = async (req, res) => {
   }
 };
 
-// ── 7. Support Contacts Management ────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 7. SUPPORT CONTACTS (the public "Contact Us" form inbox)
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/contacts
+ * The full inbox of messages submitted through the public contact form
+ * (see contactController.createContact for how they're created).
+ */
 exports.getContacts = async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
@@ -326,6 +439,14 @@ exports.getContacts = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/admin/contacts/:id/reply
+ * Body: { replyText: string }
+ * Appends an admin reply to the ticket's thread and marks it "replied".
+ * NOTE: this only stores the reply in the database — it does not currently
+ * email the reply back to the person who submitted the ticket. If that's
+ * expected, wire in sendEmail() here using the ticket's `email` field.
+ */
 exports.replyToContact = async (req, res) => {
   try {
     const { replyText } = req.body;
@@ -350,6 +471,11 @@ exports.replyToContact = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/contacts/:id/status
+ * Body: { status: "unread" | "read" | "replied" }
+ * Manually re-tag a ticket's status (e.g. mark as read without replying).
+ */
 exports.updateContactStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -366,7 +492,19 @@ exports.updateContactStatus = async (req, res) => {
   }
 };
 
-// ── 8. System Notifications ──────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════
+// 8. SYSTEM NOTIFICATIONS (admin broadcasts to users/vendors)
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/admin/notifications
+ * Body: { title, message, targetRole?: "all"|"buyer"|"vendor" }
+ * Creates a broadcast notification record. `req.user` is the admin sending
+ * it (attached by the `protect` middleware), used to stamp who sent it.
+ * NOTE: this only stores the notification — it does not push it in real time
+ * or email it. Wire this into Socket.io (see socket/chatSocket.js for the
+ * pattern) or sendEmail() if live delivery is needed later.
+ */
 exports.sendNotification = async (req, res) => {
   try {
     const { title, message, targetRole } = req.body;
@@ -388,6 +526,10 @@ exports.sendNotification = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/admin/notifications
+ * History of every notification the admin team has broadcast, newest first.
+ */
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find().sort({ createdAt: -1 });

@@ -1,6 +1,17 @@
-const Food = require("../models/Food");
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// backend/controllers/foodController.js
+// Public-facing (no auth required) endpoints for browsing the menu
+// catalogue — used by the buyer-side Menu and FoodDetail pages.
 
+const Food = require("../models/Food");
+const escapeRegex = require("../utils/escapeRegex");
+
+/**
+ * GET /api/foods
+ * Lists all AVAILABLE food items (isAvailable: true only — hidden/out of
+ * stock items never reach the public catalogue). Supports:
+ *   ?category=Burgers   -> exact category match
+ *   ?search=zinger      -> case-insensitive match on title, category, or vendor name
+ */
 const listFoods = async (req, res, next) => {
   try {
     const { category, search } = req.query;
@@ -20,6 +31,12 @@ const listFoods = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/foods/:id
+ * A single food item's full details (for the FoodDetail page).
+ * Returns 404 if the item doesn't exist OR is currently unavailable —
+ * buyers should never be able to open a listing that's been hidden.
+ */
 const getFood = async (req, res, next) => {
   try {
     const food = await Food.findOne({ _id: req.params.id, isAvailable: true }).populate("vendor", "storeName owner logo");
