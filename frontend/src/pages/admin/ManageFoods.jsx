@@ -28,7 +28,7 @@ const ManageFoods = () => {
       const res = await fetch(`${BASE}/admin/foods`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch foods");
       const data = await res.json();
-      setFoods(data);
+      setFoods(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error(error.message);
     } finally {
