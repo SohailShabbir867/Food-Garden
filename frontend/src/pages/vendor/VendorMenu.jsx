@@ -39,6 +39,22 @@ const VendorMenu = () => {
   const [form, setForm] = useState(BLANK_FORM);
   const [saving, setSaving] = useState(false);
 
+  const handleModalFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image file size must be less than 5MB!");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm((prev) => ({ ...prev, image: reader.result }));
+        toast.success("Image attached!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // ── Load menu from backend ───────────────────────────────
   const loadMenu = useCallback(async () => {
     setLoading(true);
@@ -376,17 +392,43 @@ const VendorMenu = () => {
                     />
                   </div>
 
-                  <div className="col-span-2">
-                    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider block mb-1.5">
-                      Image URL
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider block">
+                      Food Image (Saved Directly to MongoDB)
                     </label>
-                    <input
-                      type="url"
-                      value={form.image}
-                      onChange={(e) => setForm({ ...form, image: e.target.value })}
-                      placeholder="https://..."
-                      className="w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm font-bold text-[#3A0519] focus:outline-none focus:border-[#e21b70]"
-                    />
+
+                    {form.image && (
+                      <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 mb-2">
+                        <img src={form.image} alt="Food Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, image: "" })}
+                          className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-lg font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <label className="flex-1 bg-pink-50 hover:bg-pink-100 text-[#e21b70] border border-pink-200 rounded-xl py-2.5 px-3 text-xs font-extrabold cursor-pointer transition flex items-center justify-center gap-1.5 text-center">
+                        <span>Upload File from Computer</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleModalFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <input
+                        type="text"
+                        value={form.image}
+                        onChange={(e) => setForm({ ...form, image: e.target.value })}
+                        placeholder="Or paste image URL"
+                        className="flex-1 border border-gray-200 rounded-xl py-2.5 px-3 text-xs font-bold text-[#3A0519] focus:outline-none focus:border-[#e21b70]"
+                      />
+                    </div>
                   </div>
 
                   <div className="col-span-2 flex items-center gap-3">

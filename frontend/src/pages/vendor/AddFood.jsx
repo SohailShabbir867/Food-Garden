@@ -32,11 +32,25 @@ const AddFood = () => {
     tags: ["Halal", "Fresh"],
   });
 
-  // Images state (URLs or preview paths)
-  const [imageUrls, setImageUrls] = useState([
-    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
-  ]);
+  // Images state (Base64 data stored directly in MongoDB)
+  const [imageUrls, setImageUrls] = useState([]);
   const [customImageUrl, setCustomImageUrl] = useState("");
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image file size must be less than 5MB!");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrls((prev) => [...prev, reader.result]);
+        toast.success("Image uploaded to database payload!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Spice Levels State
   const [spiceLevels, setSpiceLevels] = useState([
@@ -299,26 +313,44 @@ const AddFood = () => {
             ))}
           </div>
 
-          {/* Add Image URL Row */}
-          <div className="pt-4 border-t border-gray-100">
-            <label className="text-xs font-extrabold text-[#3A0519] uppercase tracking-wider block mb-2">
-              Add Photo URL or Asset Path
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="https://images.unsplash.com/... or image URL"
-                value={customImageUrl}
-                onChange={(e) => setCustomImageUrl(e.target.value)}
-                className="flex-1 bg-slate-50 border border-gray-200 rounded-2xl py-3 px-4 text-xs font-bold text-[#3A0519] focus:outline-none focus:border-[#e21b70]"
-              />
-              <button
-                type="button"
-                onClick={handleAddImageUrl}
-                className="bg-[#3A0519] hover:bg-[#520723] text-white font-extrabold text-xs px-5 py-3 rounded-2xl transition cursor-pointer flex items-center gap-1.5"
-              >
-                <FaPlus size={10} /> Add Photo
-              </button>
+          {/* Add Image File / URL Row */}
+          <div className="pt-4 border-t border-gray-100 space-y-3">
+            <div>
+              <label className="text-xs font-extrabold text-[#3A0519] uppercase tracking-wider block mb-2">
+                Upload Local Image File (Saved to MongoDB)
+              </label>
+              <label className="flex items-center justify-center gap-2 w-full bg-pink-50 hover:bg-pink-100 text-[#e21b70] border-2 border-dashed border-pink-200 rounded-2xl py-4 px-4 text-xs font-extrabold cursor-pointer transition">
+                <FaCloudUploadAlt size={18} />
+                <span>Click to Upload Image from Device</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="pt-2">
+              <label className="text-xs font-extrabold text-[#3A0519] uppercase tracking-wider block mb-2">
+                Or Add Photo Image URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="https://... image URL"
+                  value={customImageUrl}
+                  onChange={(e) => setCustomImageUrl(e.target.value)}
+                  className="flex-1 bg-slate-50 border border-gray-200 rounded-2xl py-3 px-4 text-xs font-bold text-[#3A0519] focus:outline-none focus:border-[#e21b70]"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  className="bg-[#3A0519] hover:bg-[#520723] text-white font-extrabold text-xs px-5 py-3 rounded-2xl transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <FaPlus size={10} /> Add URL
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
