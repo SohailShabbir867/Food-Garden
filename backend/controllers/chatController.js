@@ -62,6 +62,19 @@ const createChat = async (req, res) => {
       return res.status(404).json({ message: "Recipient is not available" });
     }
 
+    const Order = require("../models/Order");
+    const mongoose = require("mongoose");
+
+    let resolvedOrderId = null;
+    if (orderId) {
+      if (mongoose.Types.ObjectId.isValid(orderId)) {
+        resolvedOrderId = orderId;
+      } else {
+        const foundOrder = await Order.findOne({ orderNumber: orderId });
+        if (foundOrder) resolvedOrderId = foundOrder._id;
+      }
+    }
+
     // Check if chat thread already exists
     let chat = await Chat.findOne({
       $or: [
@@ -74,10 +87,13 @@ const createChat = async (req, res) => {
       chat = await Chat.create({
         buyer: userId,
         seller: recipientId,
-        orderId: orderId || null,
+        orderId: resolvedOrderId,
         lastMessage: "Chat started",
         lastMessageAt: new Date(),
       });
+    } else if (resolvedOrderId && !chat.orderId) {
+      chat.orderId = resolvedOrderId;
+      await chat.save();
     }
 
     chat = await chat.populate("buyer seller", "name email role avatar restaurantName");
