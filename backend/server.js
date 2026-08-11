@@ -5,7 +5,6 @@ const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const morgan = require("morgan");
 const { Server } = require("socket.io");
 
 const connectDB = require("./config/db");
@@ -19,6 +18,8 @@ const contactRoutes = require("./routes/contactRoutes");
 const foodRoutes = require("./routes/foodRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const chatSocket = require("./socket/chatSocket");
+const logger = require("./utils/logger");
+const { requestLogger } = require("./middleware/requestLogger");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -32,7 +33,7 @@ const clientOrigin = [
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
-app.use(morgan("dev")); // Added Morgan for API logging
+app.use(requestLogger); // Log all incoming API requests, endpoints, status codes, response times, and users
 
 const io = new Server(server, { cors: { origin: clientOrigin, credentials: true } });
 chatSocket(io);
@@ -53,11 +54,12 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   server.listen(PORT, () => {
-    console.log(`Food Garden API running on http://localhost:${PORT}`);
+    logger.info(`Food Garden API running on http://localhost:${PORT}`);
   });
 };
 
 startServer().catch((error) => {
-  console.error("Unable to start Food Garden API:", error.message);
+  logger.error("Unable to start Food Garden API:", error);
   process.exit(1);
 });
+

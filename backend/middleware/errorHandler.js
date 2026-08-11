@@ -2,9 +2,12 @@
 // Catches errors thrown/passed via next(err) anywhere in the app and returns
 // a consistent JSON shape instead of Express's default HTML error page.
 
+const logger = require("../utils/logger");
+
 const notFound = (req, res, next) => {
   res.status(404);
-  next(new Error(`Route not found - ${req.originalUrl}`));
+  const error = new Error(`Route not found - ${req.originalUrl}`);
+  next(error);
 };
 
 const errorHandler = (err, req, res, next) => {
@@ -24,6 +27,17 @@ const errorHandler = (err, req, res, next) => {
     message = `${field ? field.charAt(0).toUpperCase() + field.slice(1) : "Field"} already in use`;
   }
 
+  const userContext = req.user
+    ? { id: req.user._id ? req.user._id.toString() : req.user.id, role: req.user.role }
+    : undefined;
+
+  logger.error(`[${req.method} ${req.originalUrl}] ${statusCode} - ${message}`, err, {
+    statusCode,
+    endpoint: req.originalUrl,
+    method: req.method,
+    user: userContext,
+  });
+
   res.status(statusCode).json({
     message,
     stack: process.env.NODE_ENV === "production" ? undefined : err.stack,
@@ -31,3 +45,4 @@ const errorHandler = (err, req, res, next) => {
 };
 
 module.exports = { notFound, errorHandler };
+
