@@ -304,7 +304,7 @@ const getMe = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
-    if (!user || user.status !== "active" || !user.isVerified) {
+    if (!user || user.status === "blocked" || !user.isVerified) {
       return res.json({ user: null });
     }
 
