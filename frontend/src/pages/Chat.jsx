@@ -196,29 +196,31 @@ const Chat = () => {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-8 min-h-screen">
       {/* ── Header ────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-5">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-xs shrink-0"
-          style={{ backgroundColor: DK }}
-        >
-          <RiMenuLine className="text-lg" />
-        </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: DK }}>
-            Messages
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
-            Chat with vendors or support
-          </p>
+      <div className="flex items-center justify-between mb-6 bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md shrink-0"
+            style={{ backgroundColor: DK }}
+          >
+            <RiMessage3Line className="text-xl" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight" style={{ color: DK }}>
+              Messages
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
+              Connect directly with vendors and restaurant owners in real-time
+            </p>
+          </div>
         </div>
       </div>
 
       {/* ── Main Container ────────────────────────────────────── */}
       <div
-        className="bg-white rounded-2xl border overflow-hidden shadow-xs"
-        style={{ borderColor: "#E8E2D9", height: "76vh" }}
+        className="bg-white rounded-3xl border overflow-hidden shadow-xl"
+        style={{ borderColor: "#E8E2D9", height: "calc(100vh - 210px)", minHeight: "560px" }}
       >
         {loading ? (
           <div className="h-full flex items-center justify-center">

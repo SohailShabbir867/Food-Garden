@@ -40,6 +40,18 @@ const FoodDetail = () => {
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [quantity, setQuantity] = useState(1);
 
+  const isOwnItem = React.useMemo(() => {
+    if (!user || user.role !== "vendor" || !food) return false;
+    const vendorUserId = food.vendorOwnerId || food.vendorId;
+    if (vendorUserId && (vendorUserId === user._id || vendorUserId.toString() === user._id.toString())) {
+      return true;
+    }
+    if (user.restaurantName && food.vendorName) {
+      return user.restaurantName.trim().toLowerCase() === food.vendorName.trim().toLowerCase();
+    }
+    return false;
+  }, [user, food]);
+
   if (loadingFood) {
     return <div className="min-h-screen flex items-center justify-center bg-white text-[#3A0519]">Loading food item…</div>;
   }
@@ -80,18 +92,6 @@ const FoodDetail = () => {
   const spiceExtra = food.spiceLevels[selectedSpice].priceExtra;
   const unitPrice = food.basePrice + spiceExtra + addOnTotal;
   const totalPrice = unitPrice * quantity;
-
-  const isOwnItem = React.useMemo(() => {
-    if (!user || user.role !== "vendor" || !food) return false;
-    const vendorUserId = food.vendorOwnerId || food.vendorId;
-    if (vendorUserId && (vendorUserId === user._id || vendorUserId.toString() === user._id.toString())) {
-      return true;
-    }
-    if (user.restaurantName && food.vendorName) {
-      return user.restaurantName.trim().toLowerCase() === food.vendorName.trim().toLowerCase();
-    }
-    return false;
-  }, [user, food]);
 
   const handleAddToCart = () => {
     if (isOwnItem) {
