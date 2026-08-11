@@ -202,11 +202,17 @@ const FoodDetail = () => {
           {/* Vendor + Rating Row */}
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
-              <img
-                src={food.vendorAvatar}
-                alt={food.vendorName}
-                className="w-8 h-8 rounded-full"
-              />
+              {food.vendorAvatar ? (
+                <img
+                  src={food.vendorAvatar}
+                  alt={food.vendorName}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#3A0519] text-white flex items-center justify-center font-bold text-xs">
+                  {(food.vendorName || "V")[0].toUpperCase()}
+                </div>
+              )}
               <span className="text-gray-600 font-semibold flex items-center gap-1.5">
                 <FaStore className="text-[#3A0519]" />
                 {food.vendorName}
