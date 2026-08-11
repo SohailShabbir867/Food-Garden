@@ -52,7 +52,9 @@ const createOrder = async (req, res, next) => {
 
 const getMyOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ buyer: req.user._id, hiddenByBuyer: { $ne: true } }).sort({ createdAt: -1 });
+    const orders = await Order.find({ buyer: req.user._id, hiddenByBuyer: { $ne: true } })
+      .populate("vendor", "owner storeName")
+      .sort({ createdAt: -1 });
     res.json({ orders });
   } catch (error) {
     next(error);
@@ -61,7 +63,8 @@ const getMyOrders = async (req, res, next) => {
 
 const getMyOrder = async (req, res, next) => {
   try {
-    const order = await Order.findOne({ buyer: req.user._id, orderNumber: req.params.orderNumber });
+    const order = await Order.findOne({ buyer: req.user._id, orderNumber: req.params.orderNumber })
+      .populate("vendor", "owner storeName");
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json({ order });
   } catch (error) {

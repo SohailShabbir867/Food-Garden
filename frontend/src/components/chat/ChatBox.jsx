@@ -9,14 +9,38 @@ import {
   RiArrowLeftLine,
 } from "react-icons/ri";
 import socket from "../../socket";
+import { fetchChatMessages, sendChatMessage, markChatRead } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const DK = "#3A0519";
 const ACC = "#e21b70";
 const CR = "#F7F4EF";
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Normalise a Message document from the backend
+const normaliseMessage = (msg, currentUserId) => {
+  const senderId = msg.sender?._id || msg.sender;
+  const isMine = senderId === currentUserId || senderId?.toString() === currentUserId?.toString();
+  return {
+    _id: msg._id,
+    from: isMine ? "buyer" : "vendor",
+    isOwn: isMine,
+    text: msg.text || msg.message || "",
+    message: msg.text || msg.message || "",
+    imageAttachment: msg.image?.url || msg.imageAttachment || null,
+    createdAt: msg.createdAt,
+    read: Boolean(msg.read),
+    sender: msg.sender,
+  };
+};
 
-const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
+const ChatBox = ({
+  conversation,
+  onMessageSent,
+  onUnreadCleared,
+  onIncomingMessage,
+  onBack,
+}) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -27,83 +51,98 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
 
   const messagesEndRef = useRef(null);
 
-  const convId = conversation?.conversationId || conversation?.id || conversation?._id;
+  const convId = conversation?._id || conversation?.conversationId || conversation?.id;
   const otherUser = conversation?.otherUser || {
     name: conversation?.name || "User",
     avatar: conversation?.avatar,
     role: conversation?.role || "User",
   };
 
-  /* ── Scroll to bottom ─────────────────────────────────── */
+  /* ── Scroll to bottom ──────────────────────────────────── */
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  /* ── Mark messages as read via HTTP (page-load fallback) ─
-   *
-   * Called once when the user opens a conversation.  The primary path
-   * (Socket.IO `markRead` event) is also emitted below, but this HTTP
-   * call guarantees persistence even when the socket hasn't handshaked
-   * yet (e.g. slow network, first render).
-   */
-  const httpMarkRead = useCallback(async (chatId) => {
-    if (!chatId) return;
-    try {
-      await fetch(`${BASE}/chats/${chatId}/read`, {
-        method: "PUT",
-        credentials: "include",
-      });
-    } catch {
-      // Silently ignore — the socket path will cover it
+  /* ── Load messages from the real backend ───────────────── */
+  useEffect(() => {
+    if (!convId || !user?._id) return;
+
+    // Only hit the real API for real MongoDB IDs (24-char hex)
+    const isRealId = /^[a-f\d]{24}$/i.test(String(convId));
+    if (!isRealId) {
+      setMessages([]);
+      return;
     }
-  }, []);
+
+    let cancelled = false;
+    setLoading(true);
+    setMessages([]);
+
+    fetchChatMessages(convId)
+      .then((msgs) => {
+        if (cancelled) return;
+        const normalised = (msgs || []).map((m) => normaliseMessage(m, user._id));
+        setMessages(normalised);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // Non-fatal: still show the chat box even if messages fail to load
+        console.error("[ChatBox] fetchChatMessages error:", err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [convId, user?._id]);
 
   /* ── Socket: join room + listeners ─────────────────────── */
   useEffect(() => {
     if (!convId) return;
 
-    // 1. Join this conversation's socket room
+    // Join the socket room for this conversation
     socket.emit("joinChat", convId);
 
-    // 2. Emit markRead immediately so any unread messages are marked
-    //    on the backend and the sender's screen flips to green ticks.
+    // Emit markRead immediately so unread messages flip to green ticks
     socket.emit("markRead", { chatId: convId });
 
-    // 3. Also fire HTTP fallback (handles page-load before socket connects)
-    httpMarkRead(convId);
+    // HTTP fallback — ensures read status is persisted even on page load
+    const isRealId = /^[a-f\d]{24}$/i.test(String(convId));
+    if (isRealId) {
+      markChatRead(convId).catch(() => {});
+    }
 
-    // ── Incoming new message from the other party ──────────
+    if (onUnreadCleared) onUnreadCleared(convId);
+
+    // ── Incoming new message from the other party ───────────
     const handleIncomingMessage = (msg) => {
+      const normalised = normaliseMessage(msg, user?._id);
       setMessages((prev) => {
-        if (prev.some((m) => m._id === msg._id)) return prev;
-        return [...prev, msg];
+        if (prev.some((m) => m._id === normalised._id)) return prev;
+        return [...prev, normalised];
       });
       scrollToBottom();
 
-      // When I receive a new message, immediately mark it as read
-      // (because I am looking at this chat right now).
+      // I am actively viewing this chat — mark it read immediately
       socket.emit("markRead", { chatId: convId });
+
+      // Update the sidebar preview
+      if (onIncomingMessage) onIncomingMessage(convId, normalised);
     };
 
-    // ── Sent messages turning green (other party read them) ─
-    //
-    // `messagesRead` is broadcast to the whole room when the OTHER person
-    // opens the chat.  We flip ALL of our own sent messages to read:true
-    // so the ticks instantly turn green.
-    //
+    // ── Sender sees their ticks turn green ──────────────────
     const handleMessagesRead = ({ chatId }) => {
       if (chatId !== convId) return;
       setMessages((prev) =>
         prev.map((m) =>
-          // Only update messages that are "mine" (isOwn / from=buyer) and unread
-          (m.isOwn || m.from === "buyer") && !m.read
-            ? { ...m, read: true }
-            : m
+          (m.isOwn || m.from === "buyer") && !m.read ? { ...m, read: true } : m
         )
       );
     };
 
-    // ── Typing indicator ───────────────────────────────────
+    // ── Typing indicator ────────────────────────────────────
     const handleUserTyping = ({ isTyping }) => {
       setOtherIsTyping(Boolean(isTyping));
     };
@@ -118,25 +157,14 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
       socket.off("userTyping", handleUserTyping);
       socket.emit("leaveChat", convId);
     };
-  }, [convId, scrollToBottom, httpMarkRead]);
+  }, [convId, user?._id, scrollToBottom, onUnreadCleared, onIncomingMessage]);
 
-  /* ── Load conversation messages ───────────────────────── */
-  useEffect(() => {
-    if (conversation?.messages) {
-      setMessages(conversation.messages);
-    } else {
-      setMessages([]);
-    }
-    if (onUnreadCleared && convId) {
-      onUnreadCleared(convId);
-    }
-  }, [convId, conversation, onUnreadCleared]);
-
+  /* ── Auto-scroll when messages change ───────────────────── */
   useEffect(() => {
     scrollToBottom();
   }, [messages, otherIsTyping, scrollToBottom]);
 
-  /* ── Handle Typing Status Signal ────────────────────── */
+  /* ── Typing signal ──────────────────────────────────────── */
   const handleInputChange = (val) => {
     setText(val);
     if (convId) {
@@ -144,54 +172,59 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
     }
   };
 
-  /* ── Send message ─────────────────────────────────────── */
+  /* ── Send message ─────────────────────────────────────────*/
   const handleSend = async (e) => {
     e?.preventDefault();
     const trimmed = text.trim();
     if (!trimmed && !selectedImage) return;
 
+    // Stop typing indicator
+    if (convId) socket.emit("typing", { chatId: convId, isTyping: false });
+
+    // Optimistic message (shown immediately)
+    const optimisticId = `opt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const optimisticMsg = {
+      _id: optimisticId,
+      from: "buyer",
+      isOwn: true,
+      text: trimmed,
+      message: trimmed,
+      imageAttachment: null,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setText("");
+    setSelectedImage(null);
+
+    const isRealId = /^[a-f\d]{24}$/i.test(String(convId));
+
     try {
       setSending(true);
 
-      let imageAttachmentUrl = null;
-      if (selectedImage) {
-        if (typeof selectedImage === "string") {
-          imageAttachmentUrl = selectedImage;
-        } else {
-          imageAttachmentUrl = URL.createObjectURL(selectedImage);
-        }
+      let savedMessage = optimisticMsg;
+
+      if (isRealId) {
+        // Persist to the backend
+        const saved = await sendChatMessage(convId, trimmed);
+        savedMessage = normaliseMessage(saved, user?._id);
+
+        // Replace the optimistic message with the real saved one
+        setMessages((prev) =>
+          prev.map((m) => (m._id === optimisticId ? savedMessage : m))
+        );
+
+        // Broadcast the real saved message via socket so the other party sees it
+        socket.emit("sendMessage", { chatId: convId, message: savedMessage });
+      } else {
+        // Not a real chat thread yet — socket relay only (no DB persistence)
+        socket.emit("sendMessage", { chatId: convId, message: optimisticMsg });
       }
 
-      const newMsg = {
-        _id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        from: "buyer",
-        isOwn: true,
-        text: trimmed,
-        message: trimmed,
-        imageAttachment: imageAttachmentUrl,
-        createdAt: new Date().toISOString(),
-        read: false, // starts as unread (grey tick)
-      };
-
-      // 1. Update local state immediately (optimistic)
-      setMessages((prev) => [...prev, newMsg]);
-      setText("");
-      setSelectedImage(null);
-
-      // 2. Stop typing indicator
-      if (convId) {
-        socket.emit("typing", { chatId: convId, isTyping: false });
-      }
-
-      // 3. Broadcast to the other party via socket
-      if (convId) {
-        socket.emit("sendMessage", { chatId: convId, message: newMsg });
-      }
-
-      if (onMessageSent) {
-        onMessageSent(newMsg);
-      }
+      if (onMessageSent) onMessageSent(savedMessage);
     } catch (err) {
+      // Rollback: remove the optimistic message
+      setMessages((prev) => prev.filter((m) => m._id !== optimisticId));
       toast.error("Failed to send message.");
     } finally {
       setSending(false);
@@ -200,10 +233,9 @@ const ChatBox = ({ conversation, onMessageSent, onUnreadCleared, onBack }) => {
 
   const isFirstInGroup = (idx) => {
     if (idx === 0) return true;
-    const curSender = messages[idx].from || (messages[idx].isOwn ? "buyer" : "vendor");
-    const prevSender =
-      messages[idx - 1].from || (messages[idx - 1].isOwn ? "buyer" : "vendor");
-    return curSender !== prevSender;
+    const cur = messages[idx].from || (messages[idx].isOwn ? "buyer" : "vendor");
+    const prev = messages[idx - 1].from || (messages[idx - 1].isOwn ? "buyer" : "vendor");
+    return cur !== prev;
   };
 
   /* ── Avatar helper ─────────────────────────────────────── */

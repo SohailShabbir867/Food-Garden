@@ -172,11 +172,23 @@ const TrackOrder = () => {
   };
 
   // Open Chat with Vendor
+  // Uses vendor.owner (the vendor's User ID) when available — this lets the chat
+  // page create a real backend thread via POST /api/chats.
+  // Falls back to vendorName search if the owner ID isn't populated.
   const handleMessageVendor = () => {
     if (!order) return;
-    const vName = order.vendorName || "Vendor";
+    const vendorUserId = order.vendor?.owner?._id || order.vendor?.owner;
+    const vName = order.vendorName || order.vendor?.storeName || "Vendor";
     const ordId = order.orderNumber || "";
-    navigate(`/chat?vendorName=${encodeURIComponent(vName)}&orderId=${encodeURIComponent(ordId)}`);
+
+    if (vendorUserId) {
+      navigate(
+        `/chat?vendorId=${encodeURIComponent(vendorUserId)}&orderId=${encodeURIComponent(ordId)}&vendorName=${encodeURIComponent(vName)}`
+      );
+    } else {
+      // Fallback: search by name only (no chat thread creation without real ID)
+      navigate(`/chat?vendorName=${encodeURIComponent(vName)}&orderId=${encodeURIComponent(ordId)}`);
+    }
   };
 
   // Progress index helper

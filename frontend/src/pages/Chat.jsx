@@ -2,213 +2,135 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   RiMessage3Line,
-  RiCustomerService2Line,
   RiMenuLine,
+  RiLoader4Line,
 } from "react-icons/ri";
 import ChatList from "../components/chat/ChatList";
 import ChatBox from "../components/chat/ChatBox";
 import { useAuth } from "../context/AuthContext";
+import { fetchMyChats, createOrFindChat } from "../services/api";
 
 const DK = "#3A0519";
 const ACC = "#e21b70";
 const CR = "#F7F4EF";
 
-// ── Initial Mock Conversations Data (Matching Image 2) ──
-const INITIAL_CONVERSATIONS = [
-  {
-    conversationId: "1",
-    id: "m-radif-fiaz",
+// Normalise a Chat document from the backend into the shape the UI expects
+const normaliseChat = (chat, currentUserId) => {
+  // The "other" person is whoever is NOT me
+  const iAmBuyer = chat.buyer?._id === currentUserId || chat.buyer === currentUserId;
+  const otherUser = iAmBuyer ? chat.seller : chat.buyer;
+
+  return {
+    conversationId: chat._id,
+    id: chat._id,
+    _id: chat._id,
     otherUser: {
-      _id: "u1",
-      name: "M Radif Fiaz",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-      role: "User",
-      isOnline: true,
+      _id: otherUser?._id,
+      name: otherUser?.name || otherUser?.restaurantName || "User",
+      avatar: otherUser?.avatar || null,
+      role: otherUser?.role || "User",
     },
-    unreadCount: 0,
-    lastTime: "15 Jul",
     lastMessage: {
-      text: "han admin",
-      message: "han admin",
-      from: "buyer",
-      isOwn: true,
-      createdAt: "2026-07-15T11:13:00.000Z",
+      text: chat.lastMessage || "",
+      message: chat.lastMessage || "",
+      createdAt: chat.lastMessageAt || chat.updatedAt,
     },
-    messages: [
-      {
-        _id: 1,
-        from: "vendor",
-        isOwn: false,
-        text: "Hy Admin",
-        message: "Hy Admin",
-        createdAt: "2026-07-15T11:50:00.000Z",
-        read: true,
-      },
-      {
-        _id: 2,
-        from: "buyer",
-        isOwn: true,
-        text: "han admin",
-        message: "han admin",
-        createdAt: "2026-07-15T11:13:00.000Z",
-        read: true,
-      },
-    ],
-  },
-  {
-    conversationId: "2",
-    id: "sohail-shabbir",
-    otherUser: {
-      _id: "u2",
-      name: "Sohail Shabbir",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      role: "User",
-      isOnline: true,
-    },
-    unreadCount: 0,
-    lastTime: "12 Jul",
-    lastMessage: {
-      text: "Image",
-      message: "Image",
-      from: "buyer",
-      isOwn: true,
-      createdAt: "2026-07-12T14:30:00.000Z",
-    },
-    messages: [
-      {
-        _id: 101,
-        from: "vendor",
-        isOwn: false,
-        text: "Hello! I have a question regarding my order status.",
-        message: "Hello! I have a question regarding my order status.",
-        createdAt: "2026-07-12T14:25:00.000Z",
-        read: true,
-      },
-      {
-        _id: 102,
-        from: "buyer",
-        isOwn: true,
-        text: "Sure! Let me check the details for you right now.",
-        message: "Sure! Let me check the details for you right now.",
-        createdAt: "2026-07-12T14:30:00.000Z",
-        read: true,
-      },
-    ],
-  },
-  {
-    conversationId: "3",
-    id: "ali-hassan",
-    otherUser: {
-      _id: "u3",
-      name: "Ali Hassan",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-      role: "Vendor",
-      isOnline: false,
-    },
-    unreadCount: 1,
-    lastTime: "10 Jul",
-    lastMessage: {
-      text: "Is my vendor registration approved?",
-      message: "Is my vendor registration approved?",
-      from: "vendor",
-      isOwn: false,
-      createdAt: "2026-07-10T09:15:00.000Z",
-    },
-    messages: [
-      {
-        _id: 201,
-        from: "vendor",
-        isOwn: false,
-        text: "Is my vendor registration approved?",
-        message: "Is my vendor registration approved?",
-        createdAt: "2026-07-10T09:15:00.000Z",
-        read: false,
-      },
-    ],
-  },
-];
+    lastTime: chat.lastMessageAt || chat.updatedAt,
+    unreadCount: chat.unreadCount || 0,
+  };
+};
 
 const Chat = () => {
   const [searchParams] = useSearchParams();
-  const { clearUnreadChatCount } = useAuth();
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
-  const [activeConv, setActiveConv] = useState(() => {
-    const initialVendorName = searchParams.get("vendorName");
-    if (initialVendorName) {
-      const match = INITIAL_CONVERSATIONS.find((c) =>
-        c.otherUser.name.toLowerCase().includes(initialVendorName.toLowerCase())
-      );
-      if (match) return match;
-    }
-    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
-      return INITIAL_CONVERSATIONS[0];
-    }
-    return null;
-  });
+  const { user, clearUnreadChatCount } = useAuth();
+  const [conversations, setConversations] = useState([]);
+  const [activeConv, setActiveConv] = useState(null);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState(null);
 
-  // Clear unread navbar badge when opening Chat page
+  // ── Clear the navbar unread badge when this page is open ─────────────────
   useEffect(() => {
     if (clearUnreadChatCount) clearUnreadChatCount();
   }, [clearUnreadChatCount]);
 
-  // Handle incoming query params: ?vendorName=...&orderId=...
+  // ── Load all conversation threads from the backend ────────────────────────
   useEffect(() => {
-    const vName = searchParams.get("vendorName");
-    const ordId = searchParams.get("orderId");
-    if (!vName) return;
+    if (!user?._id) return;
 
-    setConversations((prev) => {
-      const match = prev.find((c) =>
-        (c.otherUser?.name || "").toLowerCase().includes(vName.toLowerCase())
+    let cancelled = false;
+    setLoading(true);
+    setInitError(null);
+
+    fetchMyChats()
+      .then((chats) => {
+        if (cancelled) return;
+        const normalised = (chats || []).map((c) => normaliseChat(c, user._id));
+        setConversations(normalised);
+
+        // Auto-select the first chat on desktop if nothing is pre-selected
+        if (
+          typeof window !== "undefined" &&
+          window.innerWidth >= 1024 &&
+          normalised.length > 0 &&
+          !searchParams.get("vendorId") &&
+          !searchParams.get("vendorName")
+        ) {
+          setActiveConv(normalised[0]);
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setInitError("Could not load conversations. Is the server running?");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Handle query params: ?vendorId=<userId>&orderId=<orderNum> or ?vendorName=<name> ──
+  useEffect(() => {
+    if (!user?._id || loading) return;
+
+    const vendorId = searchParams.get("vendorId");
+    const vendorName = searchParams.get("vendorName");
+    const orderId = searchParams.get("orderId");
+
+    if (!vendorId && !vendorName) return;
+
+    // If we have a vendorId, create/find the real chat thread
+    if (vendorId) {
+      createOrFindChat(vendorId, orderId)
+        .then((chat) => {
+          const norm = normaliseChat(chat, user._id);
+          setConversations((prev) => {
+            const exists = prev.find((c) => c.conversationId === norm.conversationId);
+            if (exists) return prev;
+            return [norm, ...prev];
+          });
+          setActiveConv(norm);
+        })
+        .catch((err) => {
+          console.error("[Chat] createOrFindChat error:", err);
+        });
+      return;
+    }
+
+    // Fallback: vendorName only — try to match an existing conversation by name
+    if (vendorName) {
+      const match = conversations.find((c) =>
+        (c.otherUser?.name || "").toLowerCase().includes(vendorName.toLowerCase())
       );
       if (match) {
         setActiveConv(match);
-        return prev;
       }
-
-      // Create new conversation thread for this vendor
-      const newConv = {
-        conversationId: `conv-v-${Date.now()}`,
-        id: `v-${Date.now()}`,
-        otherUser: {
-          _id: `v-user-${Date.now()}`,
-          name: vName,
-          avatar: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150",
-          role: "Vendor",
-          isOnline: true,
-        },
-        activeOrderNumber: ordId || null,
-        unreadCount: 0,
-        lastTime: "Just now",
-        lastMessage: {
-          text: ordId ? `Question regarding Order #${ordId}` : "Hi! I have a question regarding my order.",
-          message: ordId ? `Question regarding Order #${ordId}` : "Hi! I have a question regarding my order.",
-          from: "buyer",
-          isOwn: true,
-          createdAt: new Date().toISOString(),
-        },
-        messages: [
-          {
-            _id: `msg-init-${Date.now()}`,
-            from: "buyer",
-            isOwn: true,
-            text: ordId
-              ? `Hi ${vName}! I'm tracking my Order #${ordId} and wanted to check with you.`
-              : `Hi ${vName}! I have a question regarding my order.`,
-            message: ordId
-              ? `Hi ${vName}! I'm tracking my Order #${ordId} and wanted to check with you.`
-              : `Hi ${vName}! I have a question regarding my order.`,
-            createdAt: new Date().toISOString(),
-            read: false,
-          },
-        ],
-      };
-
-      setActiveConv(newConv);
-      return [newConv, ...prev];
-    });
-  }, [searchParams]);
+      // If no match found, we can't create without a real userId — show a notice
+    }
+  }, [searchParams, user?._id, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Filtered conversations ──────────────────────────── */
   const filteredConversations = useMemo(() => {
@@ -219,19 +141,20 @@ const Chat = () => {
     );
   }, [conversations, search]);
 
-  /* ── Message sent handler ────────────────────────────── */
+  /* ── Message sent callback: update sidebar last message ─ */
   const handleMessageSent = useCallback(
     (savedMessage) => {
       setConversations((prev) =>
         prev.map((c) => {
-          if (
-            c.conversationId === activeConv?.conversationId ||
-            c.id === activeConv?.id
-          ) {
+          if (c.conversationId === activeConv?.conversationId) {
             return {
               ...c,
-              lastMessage: savedMessage,
-              messages: [...(c.messages || []), savedMessage],
+              lastMessage: {
+                text: savedMessage.text || savedMessage.message || "",
+                message: savedMessage.text || savedMessage.message || "",
+                createdAt: savedMessage.createdAt,
+              },
+              lastTime: savedMessage.createdAt,
             };
           }
           return c;
@@ -241,7 +164,7 @@ const Chat = () => {
     [activeConv]
   );
 
-  /* ── Clear unread count ──────────────────────────────── */
+  /* ── Clear unread count for the active conversation ─────── */
   const handleUnreadCleared = useCallback((convId) => {
     setConversations((prev) =>
       prev.map((c) => {
@@ -253,9 +176,28 @@ const Chat = () => {
     );
   }, []);
 
+  /* ── Incoming real-time message updates the sidebar preview ─ */
+  const handleIncomingMessage = useCallback((convId, msg) => {
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.conversationId !== convId) return c;
+        return {
+          ...c,
+          lastMessage: {
+            text: msg.text || msg.message || "",
+            message: msg.text || msg.message || "",
+            createdAt: msg.createdAt,
+          },
+          lastTime: msg.createdAt,
+          // Don't bump unreadCount here — ChatBox handles that
+        };
+      })
+    );
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-      {/* ── Top Header Navbar (Matching Image 2) ─────────── */}
+      {/* ── Header ────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-5">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-xs shrink-0"
@@ -268,17 +210,31 @@ const Chat = () => {
             Messages
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
-            Chat with users who contact support
+            Chat with vendors or support
           </p>
         </div>
       </div>
 
-      {/* ── Main Frame Container (Matching Image 2) ──────── */}
+      {/* ── Main Container ────────────────────────────────────── */}
       <div
         className="bg-white rounded-2xl border overflow-hidden shadow-xs"
         style={{ borderColor: "#E8E2D9", height: "76vh" }}
       >
-        {conversations.length === 0 ? (
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <RiLoader4Line className="animate-spin text-4xl" style={{ color: DK }} />
+          </div>
+        ) : initError ? (
+          <div className="h-full flex items-center justify-center text-center px-6">
+            <div>
+              <RiMessage3Line className="text-4xl mb-3 mx-auto" style={{ color: DK }} />
+              <p className="font-bold text-base mb-1" style={{ color: DK }}>
+                Connection Error
+              </p>
+              <p className="text-sm text-gray-400">{initError}</p>
+            </div>
+          </div>
+        ) : conversations.length === 0 ? (
           /* Empty State */
           <div className="h-full flex items-center justify-center text-center px-6">
             <div>
@@ -306,7 +262,7 @@ const Chat = () => {
             </div>
           </div>
         ) : (
-          /* Two-panel layout matching Image 2 */
+          /* Two-panel layout */
           <div className="grid grid-cols-1 lg:grid-cols-12 h-full">
             {/* Sidebar */}
             <div
@@ -335,6 +291,7 @@ const Chat = () => {
                   conversation={activeConv}
                   onMessageSent={handleMessageSent}
                   onUnreadCleared={handleUnreadCleared}
+                  onIncomingMessage={handleIncomingMessage}
                   onBack={() => setActiveConv(null)}
                 />
               ) : (

@@ -37,3 +37,19 @@ export const createOrder = (body) => request("/orders", { method: "POST", body: 
 export const fetchMyOrders = () => request("/orders");
 export const fetchMyOrder = (orderNumber) => request(`/orders/${encodeURIComponent(orderNumber)}`);
 export const removeMyOrder = (id) => request(`/orders/${id}`, { method: "DELETE" });
+
+// ── Chat API ──────────────────────────────────────────────────────────────
+export const fetchMyChats = () => request("/chats");
+export const fetchChatMessages = (chatId) => request(`/chats/${encodeURIComponent(chatId)}/messages`);
+export const sendChatMessage = (chatId, text) =>
+  request(`/chats/${encodeURIComponent(chatId)}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+export const createOrFindChat = (recipientId, orderId) =>
+  request("/chats", {
+    method: "POST",
+    body: JSON.stringify({ recipientId, orderId: orderId || undefined }),
+  });
+export const markChatRead = (chatId) =>
+  request(`/chats/${encodeURIComponent(chatId)}/read`, { method: "PUT" });
