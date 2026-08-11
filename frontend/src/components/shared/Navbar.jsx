@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navlogo from "../../assets/logo/Navlogo.png";
 import {
   FaSearch, FaShoppingCart, FaBars, FaTimes,
-  FaUser, FaSignOutAlt, FaChevronDown, FaTachometerAlt, FaUtensils, FaShoppingBag, FaTruck
+  FaUser, FaSignOutAlt, FaChevronDown, FaTachometerAlt, FaUtensils, FaShoppingBag, FaTruck, FaComments
 } from "react-icons/fa";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -20,7 +20,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cartItems } = useCart();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, unreadChatCount, clearUnreadChatCount } = useAuth();
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -191,6 +191,21 @@ const Navbar = () => {
               <FaSearch size={15} />
             </button>
           </div>
+
+          {/* Chat Icon with Red Notification Badge */}
+          <Link
+            to="/chat"
+            onClick={clearUnreadChatCount}
+            className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group"
+            title="Live Chat Messages"
+          >
+            <FaComments size={19} className="group-hover:text-[#e21b70] transition-colors" />
+            {unreadChatCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-pulse shadow-md border border-white">
+                {unreadChatCount}
+              </span>
+            )}
+          </Link>
 
           {/* Cart */}
           <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white group">

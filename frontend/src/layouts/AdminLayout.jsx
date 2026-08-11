@@ -14,6 +14,7 @@ import {
   FaTimes,
   FaEnvelope,
   FaBell,
+  FaComments,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
@@ -25,7 +26,7 @@ const AdminLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, unreadChatCount, clearUnreadChatCount } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -38,6 +39,7 @@ const AdminLayout = () => {
     { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt size={18} /> },
     { name: "Manage Users", path: "/admin/users", icon: <FaUsers size={18} /> },
     { name: "Manage Foods", path: "/admin/foods", icon: <FaUtensils size={18} /> },
+    { name: "Live Chat", path: "/chat", icon: <FaComments size={18} /> },
     { name: "Reports", path: "/admin/reports", icon: <FaFlag size={18} /> },
     { name: "Messages", path: "/admin/contacts", icon: <FaEnvelope size={18} /> },
     { name: "Notifications", path: "/admin/notifications", icon: <FaBell size={18} /> },
@@ -227,6 +229,21 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Live Chat Icon with Red Notification Badge */}
+            <Link
+              to="/chat"
+              onClick={clearUnreadChatCount}
+              className="relative p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 hover:text-[#e21b70]"
+              title="Live Chat Messages"
+            >
+              <FaComments size={18} />
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-pulse shadow-md border border-white">
+                  {unreadChatCount}
+                </span>
+              )}
+            </Link>
+
             <div className="text-right hidden sm:block">
               <p className="font-bold text-gray-800 text-sm">
                 {user?.name || "Super Admin"}

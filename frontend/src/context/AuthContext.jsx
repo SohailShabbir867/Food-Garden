@@ -94,6 +94,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  const clearUnreadChatCount = () => setUnreadChatCount(0);
+
+  // ── Global real-time chat notification listener ──
+  useEffect(() => {
+    const handleNewMessage = (msg) => {
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/chat")) {
+        setUnreadChatCount((prev) => prev + 1);
+      }
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    return () => socket.off("newMessage", handleNewMessage);
+  }, []);
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === "admin";
   const isVendor = user?.role === "vendor";
@@ -112,6 +128,9 @@ export const AuthProvider = ({ children }) => {
         isVendor,
         isBuyer,
         loading,
+        unreadChatCount,
+        setUnreadChatCount,
+        clearUnreadChatCount,
       }}
     >
       {children}

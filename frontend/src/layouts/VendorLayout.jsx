@@ -9,6 +9,7 @@ import {
   FaPlus,
   FaBars,
   FaUser,
+  FaComments,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
@@ -19,7 +20,7 @@ const VendorLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, unreadChatCount, clearUnreadChatCount } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -33,6 +34,7 @@ const VendorLayout = () => {
     { name: "Manage Menu", path: "/vendor/menu", icon: <FaUtensils size={18} /> },
     { name: "Post Food Item", path: "/vendor/add-food", icon: <FaPlus size={18} /> },
     { name: "Orders", path: "/vendor/orders", icon: <FaClipboardList size={18} /> },
+    { name: "Live Chat", path: "/chat", icon: <FaComments size={18} /> },
     { name: "Profile", path: "/vendor/profile", icon: <FaUser size={18} /> },
   ];
 
@@ -151,6 +153,21 @@ const VendorLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Live Chat Icon with Red Notification Badge */}
+            <Link
+              to="/chat"
+              onClick={clearUnreadChatCount}
+              className="relative p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 hover:text-[#e21b70]"
+              title="Live Chat Messages"
+            >
+              <FaComments size={18} />
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-pulse shadow-md border border-white">
+                  {unreadChatCount}
+                </span>
+              )}
+            </Link>
+
             <div className="text-right hidden sm:block">
               <p className="font-bold text-gray-800 text-sm">
                 {user?.name || "Vendor"}
