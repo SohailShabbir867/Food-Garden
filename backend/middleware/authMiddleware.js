@@ -1,10 +1,10 @@
 // backend/middleware/authMiddleware.js
+// Verifies the 7-day JWT (from httpOnly cookie or Authorization header)
+// and attaches the authenticated user to req.user.
 
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// Verifies the JWT (from the httpOnly cookie or Authorization header)
-// and attaches the logged-in user to req.user.
 const protect = async (req, res, next) => {
   try {
     let token = req.cookies?.token;
@@ -14,20 +14,20 @@ const protect = async (req, res, next) => {
     }
 
     if (!token) {
-      return res.status(401).json({ message: "Not authorized, no token" });
+      return res.status(401).json({ message: "Not authorized, no token provided" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
-    if (!user || user.status !== "active" || !user.isVerified) {
-      return res.status(401).json({ message: "Not authorized, user not found" });
+    if (!user || user.status === "blocked" || !user.isVerified) {
+      return res.status(401).json({ message: "Not authorized, user unavailable or blocked" });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Not authorized, invalid token" });
+    return res.status(401).json({ message: "Not authorized, invalid or expired token" });
   }
 };
 

@@ -281,8 +281,19 @@ const resetPassword = async (req, res, next) => {
 // POST /api/auth/logout
 // ─────────────────────────────────────────────────────────────────
 const logout = (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "Logged out" });
+  const cookieOptions = generateToken.getCookieOptions
+    ? generateToken.getCookieOptions()
+    : {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
+      };
+
+  delete cookieOptions.maxAge;
+
+  res.clearCookie("token", cookieOptions);
+  res.json({ message: "Logged out successfully" });
 };
 
 // ─────────────────────────────────────────────────────────────────
