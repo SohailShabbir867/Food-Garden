@@ -75,6 +75,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
+    // Short bio / about-me text. Used by the profile edit forms
+    // (authController.updateProfile writes to this field).
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   { timestamps: true }
 );

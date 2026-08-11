@@ -52,6 +52,13 @@ const vendorSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    // Store bio shown on the vendor's public profile / "About" section.
+    // Written by vendorController.updateVendorProfile.
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     totalOrders: {
       type: Number,
       default: 0,
