@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { FaUtensils, FaSearch, FaTrash, FaCheckCircle, FaStore, FaEyeSlash, FaEye, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "/api");
 
 const StatusBadge = ({ isAvailable }) => {
   return isAvailable ? (

@@ -6,7 +6,11 @@ import { connectSocket, disconnectSocket, socket } from "../socket";
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "/api");
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

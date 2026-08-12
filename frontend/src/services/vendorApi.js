@@ -2,7 +2,11 @@
 // Centralised API calls for the Vendor portal.
 // All requests include the JWT token stored by AuthContext.
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "/api");
 
 const headers = () => ({ "Content-Type": "application/json" });
 

@@ -16,27 +16,25 @@ const formatTime = (dateStr) => {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-const ChatMessage = ({ message, otherUser, showAvatar = true, onImageClick }) => {
+const ChatMessage = ({ message, otherUser, currentUser, showAvatar = true, onImageClick }) => {
   const isMine = message.from === "buyer" || message.isOwn;
   const hasImage = Boolean(message.imageAttachment || message.image?.url);
   const imageUrl = message.imageAttachment || message.image?.url;
   const textContent = message.text || message.message;
   const hasCaption = textContent && textContent !== "Image";
 
+  const otherAvatarUrl = otherUser?.avatar || message.sender?.avatar || otherUser?.profilePhoto?.url;
+  const myAvatarUrl = currentUser?.avatar || (message.sender?._id === currentUser?._id ? message.sender?.avatar : null);
+
   // Read-receipt tick logic:
-  //   isMine && read    → double green tick  (seen by recipient)
-  //   isMine && !read   → single grey tick   (sent, not yet seen)
-  //   !isMine           → no tick shown (only sender sees ticks)
   const tickIcon =
     isMine ? (
       message.read ? (
-        // Double green tick — recipient has opened the chat
         <RiCheckDoubleLine
           style={{ color: TICK_SEEN, fontSize: "13px", flexShrink: 0 }}
           title="Seen"
         />
       ) : (
-        // Single grey tick — sent but not yet seen
         <RiCheckLine
           style={{ color: TICK_UNSEEN, fontSize: "13px", flexShrink: 0 }}
           title="Sent"
@@ -48,15 +46,15 @@ const ChatMessage = ({ message, otherUser, showAvatar = true, onImageClick }) =>
     <div className={`flex flex-col ${isMine ? "items-end" : "items-start"} mb-3`}>
       <div className={`flex items-end gap-2.5 max-w-[80%] sm:max-w-[70%] ${isMine ? "flex-row-reverse" : "flex-row"}`}>
 
-        {/* Avatar — only shown for the other person's messages */}
+        {/* Avatar — shown for incoming messages */}
         {!isMine && (
           <div className="w-8 h-8 shrink-0 mb-0.5">
             {showAvatar ? (
-              otherUser?.avatar || otherUser?.profilePhoto?.url ? (
+              otherAvatarUrl ? (
                 <img
-                  src={otherUser.avatar || otherUser.profilePhoto?.url}
-                  alt={otherUser.name}
-                  className="w-8 h-8 rounded-full object-cover shadow-xs"
+                  src={otherAvatarUrl}
+                  alt={otherUser?.name || "User"}
+                  className="w-8 h-8 rounded-full object-cover shadow-xs border border-gray-200"
                 />
               ) : (
                 <div
@@ -64,6 +62,30 @@ const ChatMessage = ({ message, otherUser, showAvatar = true, onImageClick }) =>
                   style={{ backgroundColor: DK }}
                 >
                   {(otherUser?.name || "?")[0].toUpperCase()}
+                </div>
+              )
+            ) : (
+              <div className="w-8 h-8" />
+            )}
+          </div>
+        )}
+
+        {/* Avatar — shown for outgoing messages */}
+        {isMine && (
+          <div className="w-8 h-8 shrink-0 mb-0.5">
+            {showAvatar ? (
+              myAvatarUrl ? (
+                <img
+                  src={myAvatarUrl}
+                  alt={currentUser?.name || "Me"}
+                  className="w-8 h-8 rounded-full object-cover shadow-xs border border-gray-200"
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] text-white shadow-xs"
+                  style={{ backgroundColor: "#e21b70" }}
+                >
+                  {(currentUser?.name || "U")[0].toUpperCase()}
                 </div>
               )
             ) : (

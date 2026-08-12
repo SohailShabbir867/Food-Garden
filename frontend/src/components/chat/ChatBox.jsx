@@ -323,6 +323,7 @@ const ChatBox = ({
               key={msg._id || `msg-${idx}`}
               message={msg}
               otherUser={otherUser}
+              currentUser={user}
               showAvatar={isFirstInGroup(idx)}
               onImageClick={(url) => setLightboxImageUrl(url)}
             />
