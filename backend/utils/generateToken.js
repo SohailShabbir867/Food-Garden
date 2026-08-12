@@ -5,13 +5,16 @@ const jwt = require("jsonwebtoken");
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-const getCookieOptions = () => ({
-  httpOnly: true, // Prevents XSS access to cookie token
-  secure: process.env.NODE_ENV === "production", // Requires HTTPS in production
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Protects against CSRF attacks
-  maxAge: SEVEN_DAYS_MS, // Session lasts 7 days (604,800,000 ms)
-  path: "/",
-});
+const getCookieOptions = () => {
+  const isHttps = process.env.USE_HTTPS === "true";
+  return {
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: isHttps ? "none" : "lax",
+    maxAge: SEVEN_DAYS_MS,
+    path: "/",
+  };
+};
 
 const generateToken = (res, userId) => {
   const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
