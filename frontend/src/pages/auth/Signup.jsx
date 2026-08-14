@@ -1,12 +1,12 @@
 // src/pages/auth/Signup.jsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser, FaEnvelope, FaLock, FaPhone,
   FaStore, FaEye, FaEyeSlash, FaStar, FaSpinner,
-  FaUserCheck,
+  FaUserCheck, FaBan,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { registerUser } from "../../services/authApi";
@@ -20,11 +20,27 @@ const ROLES = [
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cameraGranted, setCameraGranted] = useState(false);
+  const [cameraError, setCameraError] = useState("");
   const [selectedRole, setSelectedRole] = useState("buyer");
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "", confirmPassword: "",
     restaurantName: "",
   });
+
+  useEffect(() => {
+    const requestCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setCameraGranted(true);
+        stream.getTracks().forEach((t) => t.stop());
+      } catch (err) {
+        setCameraError("Camera permission is required for security purposes. Please enable it in your browser settings to continue.");
+        setCameraGranted(false);
+      }
+    };
+    requestCamera();
+  }, []);
 
   const navigate = useNavigate();
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -115,6 +131,32 @@ const Signup = () => {
             ))}
           </div>
 
+          {/* ── Camera Permission Required Banner ──────────────────────────── */}
+          <AnimatePresence>
+            {cameraError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-5 bg-red-950/80 border border-red-500/50 rounded-2xl p-4 text-red-200 backdrop-blur-md shadow-xl"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-red-600 text-white rounded-xl shrink-0 mt-0.5">
+                    <FaBan size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-red-100 text-sm tracking-wide">
+                      Camera Permission Required
+                    </h4>
+                    <p className="text-xs text-red-300 mt-1 leading-relaxed">
+                      {cameraError}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {/* Full Name */}
@@ -129,8 +171,9 @@ const Signup = () => {
                   type="text" name="name"
                   placeholder="e.g. Ali Khan"
                   value={form.name} onChange={handleChange}
+                  disabled={!cameraGranted}
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -147,8 +190,9 @@ const Signup = () => {
                   type="email" name="email"
                   placeholder="you@example.com"
                   value={form.email} onChange={handleChange}
+                  disabled={!cameraGranted}
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -165,7 +209,8 @@ const Signup = () => {
                   type="tel" name="phone"
                   placeholder="0300-1234567"
                   value={form.phone} onChange={handleChange}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                  disabled={!cameraGranted}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -187,8 +232,9 @@ const Signup = () => {
                     type="text" name="restaurantName"
                     placeholder="e.g. Spice Garden Kitchen"
                     value={form.restaurantName} onChange={handleChange}
+                    disabled={!cameraGranted}
                     required={selectedRole === "vendor"}
-                    className="w-full bg-amber-500/5 border border-amber-500/30 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 transition text-sm"
+                    className="w-full bg-amber-500/5 border border-amber-500/30 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </motion.div>
@@ -208,8 +254,9 @@ const Signup = () => {
                     name="password"
                     placeholder="min 6 chars"
                     value={form.password} onChange={handleChange}
+                    disabled={!cameraGranted}
                     required minLength={6}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-9 pr-9 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-9 pr-9 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button
                     type="button"
@@ -232,8 +279,9 @@ const Signup = () => {
                     name="confirmPassword"
                     placeholder="••••••••"
                     value={form.confirmPassword} onChange={handleChange}
+                    disabled={!cameraGranted}
                     required
-                    className={`w-full bg-white/5 border rounded-xl py-3 pl-9 pr-4 text-white placeholder-gray-600 focus:outline-none transition text-sm ${
+                    className={`w-full bg-white/5 border rounded-xl py-3 pl-9 pr-4 text-white placeholder-gray-600 focus:outline-none transition text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       form.confirmPassword && form.password !== form.confirmPassword
                         ? "border-red-500 focus:border-red-500"
                         : "border-white/10 focus:border-[#e21b70]"
@@ -250,10 +298,14 @@ const Signup = () => {
             <motion.button
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#e21b70] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#e21b70]/25 disabled:opacity-60 flex items-center justify-center gap-2 mt-1 text-sm cursor-pointer"
+              disabled={loading || !cameraGranted}
+              className={`w-full font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 text-sm cursor-pointer ${
+                !cameraGranted 
+                  ? "bg-red-700 text-white cursor-not-allowed opacity-75"
+                  : "bg-[#e21b70] hover:bg-pink-600 text-white shadow-[#e21b70]/25 disabled:opacity-60"
+              }`}
             >
-              {loading ? <><FaSpinner className="animate-spin" /> Creating Account...</> : "Create Account & Verify Email →"}
+              {loading ? <><FaSpinner className="animate-spin" /> Creating Account...</> : !cameraGranted ? <><FaBan /> Camera Required</> : "Create Account & Verify Email →"}
             </motion.button>
           </form>
 
