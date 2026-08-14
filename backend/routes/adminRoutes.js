@@ -30,6 +30,15 @@ const {
   deleteFood,
   deleteReport,
 } = require("../controllers/adminController");
+const {
+  getSecurityStats,
+  getSecurityAlerts,
+  getBlockedEntities,
+  blockEntity,
+  unblockEntity,
+  resolveAlert,
+  deleteAlert,
+} = require("../controllers/securityController");
 
 // Gate: must be logged in AND have role "admin" to reach anything below.
 router.use(protect);
@@ -89,5 +98,21 @@ router.put("/contacts/:id/status", updateContactStatus);
 // GET  /api/admin/notifications -> history of past broadcasts
 router.post("/notifications", sendNotification);
 router.get("/notifications", getNotifications);
+
+// ── Security & Threat Intelligence ────────────────────────────────
+// GET    /api/admin/security/stats       -> aggregate metrics & counters
+// GET    /api/admin/security/alerts      -> list of incident threat alerts
+// GET    /api/admin/security/blocked     -> list of blocked devices / IPs
+// POST   /api/admin/security/block       -> manually block a device MAC or IP
+// POST   /api/admin/security/unblock     -> unblock a device MAC or IP
+// PUT    /api/admin/security/alerts/:id/resolve -> mark alert as resolved
+// DELETE /api/admin/security/alerts/:id  -> remove historical alert
+router.get("/security/stats", getSecurityStats);
+router.get("/security/alerts", getSecurityAlerts);
+router.get("/security/blocked", getBlockedEntities);
+router.post("/security/block", blockEntity);
+router.post("/security/unblock", unblockEntity);
+router.put("/security/alerts/:id/resolve", resolveAlert);
+router.delete("/security/alerts/:id", deleteAlert);
 
 module.exports = router;
