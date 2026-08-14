@@ -121,10 +121,10 @@ const Contact = () => {
                   onChange={handleChange}
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm appearance-none cursor-pointer"
                 >
-                  <option className="bg-[#1a0009]">Order Support</option>
-                  <option className="bg-[#1a0009]">Vendor Inquiry</option>
-                  <option className="bg-[#1a0009]">Partnership & Business</option>
-                  <option className="bg-[#1a0009]">General Feedback</option>
+                  <option value="Order Support" className="bg-[#1a0009]">Order Support</option>
+                  <option value="Vendor Inquiry" className="bg-[#1a0009]">Vendor Inquiry</option>
+                  <option value="Partnership & Business" className="bg-[#1a0009]">Partnership & Business</option>
+                  <option value="General Feedback" className="bg-[#1a0009]">General Feedback</option>
                 </select>
               </div>
             </div>

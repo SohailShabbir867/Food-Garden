@@ -9,17 +9,11 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
+    chunkSizeWarningLimit: 1500,
   },
   esbuild: {
     loader: 'jsx',
     include: /src\/.*\.jsx?$/,
     exclude: [],
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx',
-      },
-    },
   },
 });

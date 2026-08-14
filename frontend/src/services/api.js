@@ -32,7 +32,7 @@ export const normaliseFood = (food) => ({
 });
 
 export const fetchFoods = async (params = {}) => {
-  const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value)).toString();
+  const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "")).toString();
   const data = await request(`/foods${query ? `?${query}` : ""}`);
   return data.foods.map(normaliseFood);
 };
