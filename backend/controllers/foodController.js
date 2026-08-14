@@ -4,6 +4,7 @@
 
 const Food = require("../models/Food");
 const escapeRegex = require("../utils/escapeRegex");
+const mongoose = require("mongoose");
 
 /**
  * GET /api/foods
@@ -16,7 +17,7 @@ const listFoods = async (req, res, next) => {
   try {
     const { category, search } = req.query;
     const filter = { isAvailable: true };
-    if (category && category !== "All") filter.category = category;
+    if (category && category !== "All") filter.category = String(category);
     if (search) {
       const expression = { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" };
       filter.$or = [{ title: expression }, { category: expression }, { vendorName: expression }];
@@ -39,6 +40,9 @@ const listFoods = async (req, res, next) => {
  */
 const getFood = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid food ID" });
+    }
     const food = await Food.findOne({ _id: req.params.id, isAvailable: true }).populate("vendor", "storeName owner logo");
     if (!food) return res.status(404).json({ message: "Food item not found" });
     res.json({ food });
