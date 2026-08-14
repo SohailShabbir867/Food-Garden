@@ -20,6 +20,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const chatSocket = require("./socket/chatSocket");
 const logger = require("./utils/logger");
 const { requestLogger } = require("./middleware/requestLogger");
+const { checkSecurityBlock } = require("./middleware/securityMiddleware");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(requestLogger); // Log all incoming API requests, endpoints, status codes, response times, and users
+app.use(checkSecurityBlock); // Enforce IP / Device MAC blocklist
 
 const io = new Server(server, { cors: { origin: clientOrigin, credentials: true } });
 chatSocket(io);
