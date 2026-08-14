@@ -42,7 +42,10 @@ const ManageUsers = () => {
     try {
       setLoading(true);
       const res = await fetch(`${BASE}/admin/users`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch users");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch users");
+      }
       const data = await res.json();
       setUsers(data);
     } catch (error) {
@@ -65,7 +68,10 @@ const ManageUsers = () => {
         credentials: "include",
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed to update user status");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update user status");
+      }
       
       setUsers(users.map(u => u._id === id ? { ...u, status: newStatus } : u));
       toast.success(`User has been ${newStatus}.`);
@@ -81,7 +87,10 @@ const ManageUsers = () => {
           method: "DELETE",
           credentials: "include",
         });
-        if (!res.ok) throw new Error("Failed to delete user");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to delete user");
+        }
         
         setUsers(users.filter(u => u._id !== id));
         toast.error("User deleted permanently.");
