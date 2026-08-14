@@ -13,6 +13,7 @@ const Report = require("../models/Report");
 const Notification = require("../models/Notification");
 const Contact = require("../models/Contact");
 const escapeRegex = require("../utils/escapeRegex");
+const mongoose = require("mongoose");
 
 // ═════════════════════════════════════════════════════════════════════════
 // 1. DASHBOARD OVERVIEW
@@ -170,8 +171,8 @@ exports.getUsers = async (req, res) => {
         { email: { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" } },
       ];
     }
-    if (role && role !== "all") query.role = role;
-    if (status && status !== "all") query.status = status;
+    if (role && role !== "all") query.role = String(role);
+    if (status && status !== "all") query.status = String(status);
 
     const users = await User.find(query).sort({ createdAt: -1 });
     res.json(users);
@@ -187,6 +188,9 @@ exports.getUsers = async (req, res) => {
  */
 exports.updateUserStatus = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
     const { status } = req.body;
     const user = await User.findById(req.params.id);
 
@@ -209,6 +213,9 @@ exports.updateUserStatus = async (req, res) => {
  */
 exports.deleteUser = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json({ message: "User deleted successfully" });
@@ -230,7 +237,7 @@ exports.getVendors = async (req, res) => {
   try {
     const { status } = req.query;
     let query = {};
-    if (status && status !== "all") query.status = status;
+    if (status && status !== "all") query.status = String(status);
 
     const vendors = await Vendor.find(query).populate("owner", "name email").sort({ createdAt: -1 });
     res.json(vendors);
@@ -249,6 +256,9 @@ exports.getVendors = async (req, res) => {
  */
 exports.updateVendorStatus = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid vendor ID" });
+    }
     const { status } = req.body;
     const vendor = await Vendor.findById(req.params.id);
 
@@ -293,6 +303,9 @@ exports.getFoods = async (req, res) => {
  */
 exports.toggleFoodAvailability = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid food ID" });
+    }
     const food = await Food.findById(req.params.id);
     if (!food) return res.status(404).json({ message: "Food item not found" });
 
@@ -312,6 +325,9 @@ exports.toggleFoodAvailability = async (req, res) => {
  */
 exports.deleteFood = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid food ID" });
+    }
     const food = await Food.findByIdAndDelete(req.params.id);
     if (!food) return res.status(404).json({ message: "Food item not found" });
 
@@ -335,7 +351,7 @@ exports.getOrders = async (req, res) => {
   try {
     const { status } = req.query;
     let query = {};
-    if (status && status !== "all") query.status = status;
+    if (status && status !== "all") query.status = String(status);
 
     const orders = await Order.find(query).sort({ createdAt: -1 });
     res.json(orders);
@@ -352,6 +368,9 @@ exports.getOrders = async (req, res) => {
  */
 exports.updateOrderStatus = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
     const { status } = req.body;
     const order = await Order.findById(req.params.id);
 
@@ -391,6 +410,9 @@ exports.getReports = async (req, res) => {
  */
 exports.updateReportStatus = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid report ID" });
+    }
     const { status, resolutionNote } = req.body;
     const report = await Report.findById(req.params.id);
 
@@ -412,6 +434,9 @@ exports.updateReportStatus = async (req, res) => {
  */
 exports.deleteReport = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid report ID" });
+    }
     const report = await Report.findByIdAndDelete(req.params.id);
     if (!report) return res.status(404).json({ message: "Report not found" });
 
@@ -449,6 +474,9 @@ exports.getContacts = async (req, res) => {
  */
 exports.replyToContact = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid contact ID" });
+    }
     const { replyText } = req.body;
     if (!replyText || !replyText.trim()) {
       return res.status(400).json({ message: "Reply text is required" });
@@ -478,6 +506,9 @@ exports.replyToContact = async (req, res) => {
  */
 exports.updateContactStatus = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid contact ID" });
+    }
     const { status } = req.body;
     const contact = await Contact.findById(req.params.id);
 
