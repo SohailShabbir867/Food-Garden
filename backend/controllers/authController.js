@@ -1,6 +1,7 @@
-// backend/controllers/authController.js
-
 const User = require("../models/User");
+const SecurityAlert = require("../models/SecurityAlert");
+const BlockedEntity = require("../models/BlockedEntity");
+const { getClientIp, lookupGeoLocation } = require("../utils/geoIpHelper");
 const crypto = require("crypto");
 const generateOtp = require("../utils/generateOtp");
 const generateToken = require("../utils/generateToken");
@@ -8,6 +9,16 @@ const { sendSignupOtpEmail, sendPasswordResetOtpEmail } = require("../utils/send
 
 const hashOtp = (otp) => crypto.createHash("sha256").update(String(otp)).digest("hex");
 const normaliseEmail = (email) => (typeof email === "string" ? email.trim().toLowerCase() : "");
+
+// Calculate recursive cooldown time, capped at 300 seconds (5 min) max
+const calculateCooldownSeconds = (attempts) => {
+  if (attempts < 3) return 0;
+  if (attempts === 3) return 30; // 30s
+  if (attempts === 4) return 60; // 1m
+  if (attempts === 5) return 120; // 2m
+  const recursiveTime = 120 + (attempts - 5) * 60;
+  return Math.min(recursiveTime, 300); // capped at 300s max
+};
 
 // Shape a user for API responses — never send back password/otp fields.
 const publicUser = (user) => ({
@@ -167,16 +178,176 @@ const resendOtp = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const email = normaliseEmail(req.body.email);
-    const { password } = req.body;
+    const { password, deviceMac, deviceInfo, snapshotImage } = req.body;
+    const ip = getClientIp(req);
+    const currentDeviceMac = deviceMac || req.headers["x-device-mac"] || "Unknown Device";
+    const userAgent = req.headers["user-agent"] || "Unknown";
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
+    // 1. Check if IP or Device MAC is permanently blocked
+    const blockQuery = [{ type: "ip", value: ip, isActive: true }];
+    if (currentDeviceMac && currentDeviceMac !== "Unknown Device") {
+      blockQuery.push({ type: "deviceMac", value: currentDeviceMac, isActive: true });
     }
+    const isBlocked = await BlockedEntity.findOne({ $or: blockQuery });
+    if (isBlocked) {
+      return res.status(403).json({
+        success: false,
+        isBlocked: true,
+        message: `ACCESS BLOCKED: This ${isBlocked.type === "deviceMac" ? "Device (" + isBlocked.value + ")" : "IP (" + isBlocked.value + ")"} has been blocked due to multiple unauthorized login attempts.`,
+      });
+    }
+
+    // 2. Check for active temporary lockout
+    const alertQuery = {
+      $or: [
+        { email, status: "locked" },
+        { ip, status: "locked" },
+        ...(currentDeviceMac !== "Unknown Device" ? [{ deviceMac: currentDeviceMac, status: "locked" }] : []),
+      ],
+      lockoutUntil: { $gt: new Date() },
+    };
+
+    const activeLockout = await SecurityAlert.findOne(alertQuery).sort({ lockoutUntil: -1 });
+    if (activeLockout && activeLockout.lockoutUntil) {
+      const remainingSeconds = Math.max(1, Math.ceil((new Date(activeLockout.lockoutUntil).getTime() - Date.now()) / 1000));
+      return res.status(429).json({
+        success: false,
+        isLocked: true,
+        remainingSeconds,
+        lockoutUntil: activeLockout.lockoutUntil,
+        attempts: activeLockout.attemptCount,
+        message: `Security Lockout Active: Too many failed login attempts. Please wait ${remainingSeconds} second(s) before trying again.`,
+      });
+    }
+
+    // 3. Attempt Authentication
+    const user = await User.findOne({ email }).select("+password");
+    const isPasswordMatch = user && (await user.matchPassword(password));
+
+    if (!user || !isPasswordMatch) {
+      // Find existing alert record or create new one
+      let existingAlert = await SecurityAlert.findOne({
+        $or: [
+          { email, status: { $in: ["active", "locked"] } },
+          { ip, status: { $in: ["active", "locked"] } },
+          ...(currentDeviceMac !== "Unknown Device" ? [{ deviceMac: currentDeviceMac, status: { $in: ["active", "locked"] } }] : []),
+        ],
+      }).sort({ updatedAt: -1 });
+
+      const newAttemptCount = (existingAlert ? existingAlert.attemptCount : 0) + 1;
+      const cooldownSeconds = calculateCooldownSeconds(newAttemptCount);
+      const lockoutUntil = cooldownSeconds > 0 ? new Date(Date.now() + cooldownSeconds * 1000) : null;
+
+      // Determine threat severity & status
+      let severity = "low";
+      let status = cooldownSeconds > 0 ? "locked" : "active";
+
+      if (newAttemptCount >= 10) {
+        severity = "critical";
+        status = "blocked";
+      } else if (newAttemptCount >= 6) {
+        severity = "high";
+      } else if (newAttemptCount >= 3) {
+        severity = "medium";
+      }
+
+      // Resolve Geolocation for threat intelligence
+      const location = await lookupGeoLocation(ip);
+
+      const incidentLog = {
+        timestamp: new Date(),
+        reason: `Failed login attempt #${newAttemptCount} with invalid credentials.`,
+        ip,
+        deviceMac: currentDeviceMac,
+      };
+
+      if (existingAlert) {
+        existingAlert.email = email;
+        existingAlert.ip = ip;
+        existingAlert.deviceMac = currentDeviceMac;
+        existingAlert.attemptCount = newAttemptCount;
+        existingAlert.severity = severity;
+        existingAlert.status = status;
+        existingAlert.lockoutUntil = lockoutUntil;
+        existingAlert.lastAttemptAt = new Date();
+        existingAlert.location = location;
+        existingAlert.userAgent = userAgent;
+        if (deviceInfo) existingAlert.deviceInfo = deviceInfo;
+        if (snapshotImage) existingAlert.snapshotImage = snapshotImage;
+        existingAlert.incidentLogs.push(incidentLog);
+        await existingAlert.save();
+      } else {
+        existingAlert = await SecurityAlert.create({
+          email,
+          ip,
+          deviceMac: currentDeviceMac,
+          attemptCount: newAttemptCount,
+          severity,
+          status,
+          lockoutUntil,
+          lastAttemptAt: new Date(),
+          location,
+          userAgent,
+          deviceInfo: deviceInfo || {},
+          snapshotImage: snapshotImage || null,
+          incidentLogs: [incidentLog],
+        });
+      }
+
+      // Auto-block device & IP if 10 or more attempts
+      if (newAttemptCount >= 10) {
+        await BlockedEntity.findOneAndUpdate(
+          { type: "ip", value: ip },
+          { type: "ip", value: ip, reason: "Exceeded 10 failed login attempts", blockedBy: "Automated Threat Defense", isActive: true },
+          { upsert: true }
+        );
+        if (currentDeviceMac && currentDeviceMac !== "Unknown Device") {
+          await BlockedEntity.findOneAndUpdate(
+            { type: "deviceMac", value: currentDeviceMac },
+            { type: "deviceMac", value: currentDeviceMac, reason: "Exceeded 10 failed login attempts", blockedBy: "Automated Threat Defense", isActive: true },
+            { upsert: true }
+          );
+        }
+
+        return res.status(403).json({
+          success: false,
+          isBlocked: true,
+          attempts: newAttemptCount,
+          message: "CRITICAL THREAT DETECTED: You have exceeded the maximum allowed login attempts (10+). Your Device and IP address have been permanently blocked.",
+        });
+      }
+
+      if (cooldownSeconds > 0) {
+        return res.status(429).json({
+          success: false,
+          isLocked: true,
+          remainingSeconds: cooldownSeconds,
+          lockoutUntil,
+          attempts: newAttemptCount,
+          message: `Too many failed attempts (${newAttemptCount}). Security lockout triggered: Please wait ${cooldownSeconds} seconds before trying again.`,
+        });
+      }
+
+      const remainingBeforeLockout = 3 - newAttemptCount;
+      return res.status(401).json({
+        success: false,
+        attempts: newAttemptCount,
+        message: `Invalid email or password. You have ${remainingBeforeLockout} attempt(s) remaining before a temporary security lockout.`,
+      });
+    }
+
+    // 4. Successful login -> Clear any active lockout alerts for this email/IP
+    await SecurityAlert.updateMany(
+      {
+        $or: [{ email }, { ip }, ...(currentDeviceMac !== "Unknown Device" ? [{ deviceMac: currentDeviceMac }] : [])],
+        status: { $in: ["active", "locked"] },
+      },
+      { status: "resolved", lockoutUntil: null, attemptCount: 0 }
+    );
 
     if (!user.isVerified) {
       return res.status(403).json({
@@ -191,7 +362,7 @@ const login = async (req, res, next) => {
     }
 
     // Safety net: if this is the designated admin email but the stored role
-    // hasn't caught up (e.g. account existed before ADMIN_EMAIL was set), fix it now.
+    // hasn't caught up, fix it now.
     const isAdminEmail =
       process.env.ADMIN_EMAIL &&
       user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
