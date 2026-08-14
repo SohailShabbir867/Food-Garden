@@ -15,6 +15,7 @@ import {
   FaEnvelope,
   FaBell,
   FaComments,
+  FaShieldAlt,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
@@ -39,6 +40,7 @@ const AdminLayout = () => {
     { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt size={18} /> },
     { name: "Manage Users", path: "/admin/users", icon: <FaUsers size={18} /> },
     { name: "Manage Foods", path: "/admin/foods", icon: <FaUtensils size={18} /> },
+    { name: "Security & Alerts", path: "/admin/security", icon: <FaShieldAlt size={18} /> },
     { name: "Live Chat", path: "/chat", icon: <FaComments size={18} /> },
     { name: "Reports", path: "/admin/reports", icon: <FaFlag size={18} /> },
     { name: "Messages", path: "/admin/contacts", icon: <FaEnvelope size={18} /> },

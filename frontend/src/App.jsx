@@ -47,6 +47,7 @@ import AdminProfile from './pages/admin/AdminProfile';
 import ManageReports from './pages/admin/ManageReports';
 import ManageContacts from './pages/admin/ManageContacts';
 import SendNotification from './pages/admin/SendNotification';
+import ManageSecurity from './pages/admin/ManageSecurity';
 
 // ─── Vendor Pages ────────────────────────────────────────────
 import VendorDashboard from './pages/vendor/VendorDashboard';
@@ -199,6 +200,7 @@ function App() {
               <Route path="users" element={<ManageUsers />} />
               <Route path="vendors" element={<ManageVendors />} />
               <Route path="foods" element={<ManageFoods />} />
+              <Route path="security" element={<ManageSecurity />} />
               <Route path="orders" element={<ManageOrders />} />
               <Route path="reports" element={<ManageReports />} />
               <Route path="contacts" element={<ManageContacts />} />

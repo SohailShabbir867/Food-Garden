@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   AreaChart,
   Area,
@@ -23,6 +24,8 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaClock,
+  FaShieldAlt,
+  FaBan,
 } from "react-icons/fa";
 
 const BASE =
@@ -111,10 +114,20 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
 
-      {/* ── Page Header ───────────────────────────────────────────── */}
-      <div data-aos="fade-up">
-        <h1 className="text-2xl font-black text-gray-900 tracking-tight">Dashboard Overview</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome back, Admin. Here's what's happening today.</p>
+      {/* ── Page Header & Security Quick Banner ─────────────────── */}
+      <div data-aos="fade-up" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Dashboard Overview</h1>
+          <p className="text-gray-500 text-sm mt-1">Welcome back, Admin. Here's what's happening today.</p>
+        </div>
+        <Link
+          to="/admin/security"
+          className="bg-gradient-to-r from-gray-900 to-[#3A0519] hover:to-[#20020d] text-white px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2.5 shadow-md shadow-[#3A0519]/20 transition group self-start sm:self-auto"
+        >
+          <FaShieldAlt className="text-[#e21b70] group-hover:scale-110 transition-transform" />
+          <span>Security & Threat Center</span>
+          <span className="bg-[#e21b70] text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1">Live</span>
+        </Link>
       </div>
 
       {/* ── Stat Cards ────────────────────────────────────────────── */}
