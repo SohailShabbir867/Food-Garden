@@ -199,6 +199,28 @@ exports.updateUserStatus = async (req, res) => {
     user.status = status;
     await user.save();
 
+    // If unblocking the user, clear any related IP/MAC blocks from Threat Defense
+    if (status === "active" || status === "pending") {
+      const SecurityAlert = require("../models/SecurityAlert");
+      const BlockedEntity = require("../models/BlockedEntity");
+
+      const alerts = await SecurityAlert.find({ email: user.email });
+      const ipsToUnblock = alerts.map((a) => a.ip).filter(Boolean);
+      const macsToUnblock = alerts.map((a) => a.deviceMac).filter((mac) => mac && mac !== "Unknown Device");
+
+      if (ipsToUnblock.length > 0) {
+        await BlockedEntity.deleteMany({ type: "ip", value: { $in: ipsToUnblock } });
+      }
+      if (macsToUnblock.length > 0) {
+        await BlockedEntity.deleteMany({ type: "deviceMac", value: { $in: macsToUnblock } });
+      }
+
+      await SecurityAlert.updateMany(
+        { email: user.email },
+        { status: "resolved", lockoutUntil: null, attemptCount: 0 }
+      );
+    }
+
     res.json({ message: `User status updated to ${status}`, user });
   } catch (error) {
     res.status(500).json({ message: "Failed to update user status", error: error.message });
