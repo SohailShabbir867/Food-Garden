@@ -6,12 +6,27 @@ const Vendor = require("../models/Vendor");
 const Food = require("../models/Food");
 const Order = require("../models/Order");
 const escapeRegex = require("../utils/escapeRegex");
+const mongoose = require("mongoose");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: find the Vendor document linked to the currently logged-in user.
 // Creates a lightweight stub if none exists yet (first-time vendor login).
 // ─────────────────────────────────────────────────────────────────────────────
 const getVendorForUser = async (user) => {
+  if (user.role === "admin") {
+    return {
+      _id: user._id, // Use their user ID as a mock vendor ID
+      storeName: "Admin Dashboard",
+      owner: user._id,
+      ownerName: user.name || "Super Admin",
+      email: user.email,
+      status: "approved",
+      rating: 5,
+      cuisine: "System",
+      city: "Global",
+    };
+  }
+
   let vendor = await Vendor.findOne({ owner: user._id });
 
   if (!vendor) {
@@ -116,7 +131,7 @@ const getVendorMenu = asyncHandler(async (req, res) => {
   const { category, search, available } = req.query;
 
   const filter = { vendor: vendor._id };
-  if (category && category !== "All") filter.category = category;
+  if (category && category !== "All") filter.category = String(category);
   if (available === "true") filter.isAvailable = true;
   if (available === "false") filter.isAvailable = false;
   if (search) filter.title = { $regex: escapeRegex(String(search).slice(0, 80)), $options: "i" };
@@ -165,6 +180,10 @@ const addVendorFood = asyncHandler(async (req, res) => {
 // @access vendor / admin
 // ─────────────────────────────────────────────────────────────────────────────
 const updateVendorFood = asyncHandler(async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    res.status(400);
+    throw new Error("Invalid food ID");
+  }
   const vendor = await getVendorForUser(req.user);
 
   const food = await Food.findOne({ _id: req.params.id, vendor: vendor._id });
@@ -204,6 +223,10 @@ const updateVendorFood = asyncHandler(async (req, res) => {
 // @access vendor / admin
 // ─────────────────────────────────────────────────────────────────────────────
 const deleteVendorFood = asyncHandler(async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    res.status(400);
+    throw new Error("Invalid food ID");
+  }
   const vendor = await getVendorForUser(req.user);
 
   const food = await Food.findOne({ _id: req.params.id, vendor: vendor._id });
@@ -228,7 +251,7 @@ const getVendorOrders = asyncHandler(async (req, res) => {
   const { status, limit = 50, page = 1 } = req.query;
 
   const filter = { vendor: vendor._id };
-  if (status && status !== "All") filter.status = status;
+  if (status && status !== "All") filter.status = String(status);
 
   const skip = (Number(page) - 1) * Number(limit);
   const total = await Order.countDocuments(filter);
@@ -253,6 +276,10 @@ const getVendorOrders = asyncHandler(async (req, res) => {
 // @access vendor / admin
 // ─────────────────────────────────────────────────────────────────────────────
 const updateVendorOrderStatus = asyncHandler(async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    res.status(400);
+    throw new Error("Invalid order ID");
+  }
   const vendor = await getVendorForUser(req.user);
 
   const { status } = req.body;
