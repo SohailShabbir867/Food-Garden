@@ -36,20 +36,38 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   // ── Login (calls real backend) ────────────────────────────
-  const login = async ({ email, password }) => {
+  const login = async ({ email, password, deviceMac, deviceInfo, snapshotImage }) => {
     setLoading(true);
     try {
       const res = await fetch(`${BASE}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-device-mac": deviceMac || "",
+        },
         credentials: "include",
-        body: JSON.stringify({ email: email?.trim().toLowerCase(), password }),
+        body: JSON.stringify({
+          email: email?.trim().toLowerCase(),
+          password,
+          deviceMac,
+          deviceInfo,
+          snapshotImage,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        return { success: false, message: data.message || "Login failed" };
+        return {
+          success: false,
+          status: res.status,
+          message: data.message || "Login failed",
+          isLocked: data.isLocked || false,
+          isBlocked: data.isBlocked || false,
+          remainingSeconds: data.remainingSeconds || 0,
+          lockoutUntil: data.lockoutUntil || null,
+          attempts: data.attempts || 0,
+        };
       }
 
       const loggedUser = { ...data.user };
