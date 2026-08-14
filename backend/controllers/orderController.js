@@ -1,5 +1,7 @@
 const Food = require("../models/Food");
 const Order = require("../models/Order");
+const mongoose = require("mongoose");
+
 
 const makeOrderNumber = () => `FG-${Date.now().toString().slice(-8)}${Math.floor(10 + Math.random() * 90)}`;
 
@@ -74,6 +76,9 @@ const getMyOrder = async (req, res, next) => {
 
 const deleteMyOrder = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
     const order = await Order.findOne({ _id: req.params.id, buyer: req.user._id });
     if (!order) return res.status(404).json({ message: "Order not found" });
 
