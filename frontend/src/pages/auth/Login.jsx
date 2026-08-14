@@ -39,6 +39,8 @@ const Login = () => {
   const [blockMessage, setBlockMessage] = useState("");
   const [attemptCount, setAttemptCount] = useState(0);
   const [deviceMac, setDeviceMac] = useState("");
+  const [cameraGranted, setCameraGranted] = useState(false);
+  const [cameraError, setCameraError] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +50,19 @@ const Login = () => {
     // Generate device MAC on mount
     const mac = getDeviceFingerprint();
     setDeviceMac(mac);
+
+    // Request camera permission
+    const requestCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setCameraGranted(true);
+        stream.getTracks().forEach((t) => t.stop());
+      } catch (err) {
+        setCameraError("Camera permission is required for security purposes. Please enable it in your browser settings to continue.");
+        setCameraGranted(false);
+      }
+    };
+    requestCamera();
   }, []);
 
   // Real-time countdown timer when locked out
@@ -191,6 +206,32 @@ const Login = () => {
             )}
           </AnimatePresence>
 
+          {/* ── Camera Permission Required Banner ──────────────────────────── */}
+          <AnimatePresence>
+            {cameraError && !isBlocked && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-5 bg-red-950/80 border border-red-500/50 rounded-2xl p-4 text-red-200 backdrop-blur-md shadow-xl"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-red-600 text-white rounded-xl shrink-0 mt-0.5">
+                    <FaBan size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-red-100 text-sm tracking-wide">
+                      Camera Permission Required
+                    </h4>
+                    <p className="text-xs text-red-300 mt-1 leading-relaxed">
+                      {cameraError}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* ── Security Lockout Active Banner ──────────────────── */}
           <AnimatePresence>
             {lockoutSeconds > 0 && !isBlocked && (
@@ -255,7 +296,7 @@ const Login = () => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={lockoutSeconds > 0 || isBlocked}
+                  disabled={lockoutSeconds > 0 || isBlocked || !cameraGranted}
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -283,7 +324,7 @@ const Login = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={lockoutSeconds > 0 || isBlocked}
+                  disabled={lockoutSeconds > 0 || isBlocked || !cameraGranted}
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-11 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-[#e21b70] transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -301,9 +342,9 @@ const Login = () => {
             <motion.button
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={loading || lockoutSeconds > 0 || isBlocked}
+              disabled={loading || lockoutSeconds > 0 || isBlocked || !cameraGranted}
               className={`w-full font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 text-sm ${
-                isBlocked
+                isBlocked || !cameraGranted
                   ? "bg-red-700 text-white cursor-not-allowed opacity-75"
                   : lockoutSeconds > 0
                   ? "bg-amber-600/60 text-amber-200 cursor-not-allowed border border-amber-500/40"
@@ -315,6 +356,10 @@ const Login = () => {
               ) : isBlocked ? (
                 <span className="flex items-center gap-2">
                   <FaBan /> Access Blocked
+                </span>
+              ) : !cameraGranted ? (
+                <span className="flex items-center gap-2">
+                  <FaBan /> Camera Required
                 </span>
               ) : lockoutSeconds > 0 ? (
                 <span className="flex items-center gap-2">
