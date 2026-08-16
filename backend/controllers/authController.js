@@ -194,7 +194,7 @@ const login = async (req, res, next) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    // 1. Check if IP or Device MAC is permanently blocked
+    // 1. Check if IP is permanently blocked
     const isBlocked = await BlockedEntity.findOne({ type: "ip", value: ip, isActive: true });
     if (isBlocked) {
       return res.status(403).json({
@@ -292,8 +292,6 @@ const login = async (req, res, next) => {
         });
       }
 
-      // Do not permanently block an entire IP based only on failed credentials.
-      // Shared networks make that an attacker-controlled denial-of-service vector.
       if (newAttemptCount >= 10) {
         return res.status(429).json({
           success: false,
@@ -408,6 +406,19 @@ const resetPassword = async (req, res, next) => {
       return res.status(400).json({ message: "New password must be at least 8 characters" });
     }
 
+    const user = await User.findOne({ email });
+    if (!user || !user.resetOtp || !user.resetOtpExpiry) {
+      return res.status(400).json({ message: "Invalid or expired reset code" });
+    }
+
+    if (user.resetOtpExpiry < new Date()) {
+      return res.status(400).json({ message: "Reset code has expired. Please request a new one." });
+    }
+
+    if (!otpMatches(user.resetOtp, otp)) {
+      return res.status(400).json({ message: "Invalid reset code" });
+    }
+
     user.password = newPassword; // pre-save hook re-hashes it
     user.resetOtp = undefined;
     user.resetOtpExpiry = undefined;
@@ -467,7 +478,7 @@ const getMe = async (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
     const { name, phone, password, currentPassword, description, avatar } = req.body;
     const user = await User.findById(req.user.id || req.user._id).select("+password");
@@ -505,5 +516,5 @@ module.exports = {
   resetPassword,
   logout,
   getMe,
-  updateProfile: exports.updateProfile,
+  updateProfile,
 };
