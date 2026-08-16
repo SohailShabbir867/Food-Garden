@@ -4,6 +4,7 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
+const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const { Server } = require("socket.io");
 
@@ -25,6 +26,7 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 const server = http.createServer(app);
+
 const trustedProxy = process.env.TRUST_PROXY;
 if (trustedProxy) {
   app.set(
@@ -36,14 +38,16 @@ if (trustedProxy) {
         : trustedProxy.split(",").map((value) => value.trim())
   );
 }
+
 const clientOrigin = [
   process.env.CLIENT_URL,
   "http://localhost:5173",
-  "http://localhost:3000"
+  "http://localhost:3000",
 ].filter(Boolean);
 
+app.use(helmet());
 app.use(cors({ origin: clientOrigin, credentials: true }));
-app.use(express.json({ limit: "100kb" }));
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(requestLogger); // Log all incoming API requests, endpoints, status codes, response times, and users
 app.use(checkSecurityBlock); // Enforce IP / Device MAC blocklist
@@ -75,4 +79,3 @@ startServer().catch((error) => {
   logger.error("Unable to start Food Garden API:", error);
   process.exit(1);
 });
-

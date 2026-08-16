@@ -10,6 +10,7 @@ const ProfileForm = () => {
     name: "",
     phone: "",
     password: "",
+    currentPassword: "",
     description: "",
     avatar: "",
   });
@@ -20,7 +21,8 @@ const ProfileForm = () => {
       setFormData({
         name: user.name || "",
         phone: user.phone || "",
-        password: user.password || "",
+        password: "",
+        currentPassword: "",
         description: user.description || "",
         avatar: user.avatar || "",
       });
@@ -44,11 +46,16 @@ const ProfileForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.password && !formData.currentPassword) {
+      toast.error("Please enter your current password to set a new password.");
+      return;
+    }
     setIsLoading(true);
     
     const res = await updateProfile(formData);
     if (res.success) {
       toast.success(res.message);
+      setFormData((prev) => ({ ...prev, password: "", currentPassword: "" }));
     } else {
       toast.error(res.message);
     }
@@ -159,7 +166,22 @@ const ProfileForm = () => {
             />
           </div>
 
-          {/* Password */}
+          {/* Current Password */}
+          <div className="space-y-2.5">
+            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              <FaLock className="text-primary/70" /> Current Password
+            </label>
+            <input
+              type="password"
+              name="currentPassword"
+              value={formData.currentPassword}
+              onChange={handleChange}
+              className="w-full px-5 py-4 rounded-xl border border-gray-200 bg-white shadow-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-semibold text-gray-800"
+              placeholder="Required only if changing password"
+            />
+          </div>
+
+          {/* New Password */}
           <div className="space-y-2.5">
             <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <FaLock className="text-primary/70" /> New Password
@@ -170,7 +192,7 @@ const ProfileForm = () => {
               value={formData.password}
               onChange={handleChange}
               className="w-full px-5 py-4 rounded-xl border border-gray-200 bg-white shadow-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-semibold text-gray-800"
-              placeholder="••••••••"
+              placeholder="•••••••• (Min 8 chars)"
             />
           </div>
         </div>

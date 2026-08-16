@@ -53,4 +53,23 @@ const otpResendLimiter = createRateLimiter({
   keyFromRequest: otpKey,
 });
 
-module.exports = { otpVerificationLimiter, otpResendLimiter };
+const forgotPasswordLimiter = createRateLimiter({
+  name: "forgot-password",
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyFromRequest: otpKey,
+});
+
+const passwordResetLimiter = createRateLimiter({
+  name: "password-reset",
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyFromRequest: otpKey,
+});
+
+module.exports = {
+  otpVerificationLimiter,
+  otpResendLimiter,
+  forgotPasswordLimiter,
+  passwordResetLimiter,
+};

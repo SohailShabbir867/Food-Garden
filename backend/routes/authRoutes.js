@@ -14,7 +14,12 @@ const {
   updateProfile,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
-const { otpVerificationLimiter, otpResendLimiter } = require("../middleware/rateLimitMiddleware");
+const {
+  otpVerificationLimiter,
+  otpResendLimiter,
+  forgotPasswordLimiter,
+  passwordResetLimiter,
+} = require("../middleware/rateLimitMiddleware");
 
 // ── Signup + email verification ──────────────────────────
 router.post("/register", register);
@@ -26,8 +31,8 @@ router.post("/login", login);
 router.post("/logout", logout);
 
 // ── Password reset ───────────────────────────────────────
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/forgot-password", forgotPasswordLimiter, forgotPassword);
+router.post("/reset-password", passwordResetLimiter, resetPassword);
 
 // ── Current user (protected) ─────────────────────────────
 router.get("/me", getMe);
