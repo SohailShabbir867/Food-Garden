@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   // ── Login (calls real backend) ────────────────────────────
-  const login = async ({ email, password, deviceMac, deviceInfo, snapshotImage }) => {
+  const login = async ({ email, password, deviceMac, deviceInfo }) => {
     setLoading(true);
     try {
       const res = await fetch(`${BASE}/auth/login`, {
@@ -51,7 +51,6 @@ export const AuthProvider = ({ children }) => {
           password,
           deviceMac,
           deviceInfo,
-          snapshotImage,
         }),
       });
 

@@ -12,7 +12,6 @@ import {
   FaSync,
   FaGlobe,
   FaDesktop,
-  FaCamera,
   FaTrash,
   FaCheckCircle,
   FaTimes,
@@ -611,22 +610,6 @@ const ManageSecurity = () => {
                 </div>
               </div>
 
-              {/* Snapshot Image if captured */}
-              {selectedAlert.snapshotImage && (
-                <div className="mb-6 bg-gray-900 rounded-2xl p-4 text-center border border-red-500/30">
-                  <div className="flex items-center justify-center gap-2 text-red-400 text-xs font-bold uppercase mb-2">
-                    <FaCamera /> Security Camera Evidence Snapshot
-                  </div>
-                  <img
-                    src={selectedAlert.snapshotImage}
-                    alt="Security Evidence Snapshot"
-                    className="max-h-48 mx-auto rounded-xl border border-white/20 shadow-md"
-                  />
-                  <p className="text-[11px] text-gray-400 mt-2">
-                    Attacker photographic evidence captured during unauthorized authentication attempt.
-                  </p>
-                </div>
-              )}
 
               {/* Details Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">

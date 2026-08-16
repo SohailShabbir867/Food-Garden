@@ -81,29 +81,3 @@ export const getClientDeviceInfo = () => {
   };
 };
 
-/**
- * Attempts to capture a camera snapshot if webcam permission has been granted.
- * Returns base64 image string or null.
- */
-export const captureSecuritySnapshot = async () => {
-  try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
-    const video = document.createElement("video");
-    video.srcObject = stream;
-    await video.play();
-
-    const canvas = document.createElement("canvas");
-    canvas.width = 320;
-    canvas.height = 240;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, 320, 240);
-
-    // Stop all media tracks immediately
-    stream.getTracks().forEach((track) => track.stop());
-    return canvas.toDataURL("image/jpeg", 0.7);
-  } catch (err) {
-    // Camera denied or unavailable
-    return null;
-  }
-};

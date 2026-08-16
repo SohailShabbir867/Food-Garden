@@ -178,7 +178,7 @@ const resendOtp = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const email = normaliseEmail(req.body.email);
-    const { password, deviceMac, deviceInfo, snapshotImage } = req.body;
+    const { password, deviceMac, deviceInfo } = req.body;
     const ip = getClientIp(req);
     const currentDeviceMac = deviceMac || req.headers["x-device-mac"] || "Unknown Device";
     const userAgent = req.headers["user-agent"] || "Unknown";
@@ -277,7 +277,6 @@ const login = async (req, res, next) => {
         existingAlert.location = location;
         existingAlert.userAgent = userAgent;
         if (deviceInfo) existingAlert.deviceInfo = deviceInfo;
-        if (snapshotImage) existingAlert.snapshotImage = snapshotImage;
         existingAlert.incidentLogs.push(incidentLog);
         await existingAlert.save();
       } else {
@@ -293,7 +292,6 @@ const login = async (req, res, next) => {
           location,
           userAgent,
           deviceInfo: deviceInfo || {},
-          snapshotImage: snapshotImage || null,
           incidentLogs: [incidentLog],
         });
       }

@@ -40,10 +40,6 @@ const securityAlertSchema = new mongoose.Schema(
       type: String,
       default: "Unknown",
     },
-    snapshotImage: {
-      type: String,
-      default: null, // Base64 snapshot if captured
-    },
     attemptCount: {
       type: Number,
       default: 1,
