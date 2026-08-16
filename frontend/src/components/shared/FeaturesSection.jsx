@@ -44,17 +44,20 @@ const FeaturesSection = () => {
   };
 
   return (
-    <section className="py-20 px-6 sm:px-10 md:px-20 bg-white">
-      <div className="text-center mb-16">
+    <section className="relative overflow-hidden bg-[#fffafb] py-20 sm:py-28">
+      <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-pink-100/60 blur-3xl" />
+      <div className="section-shell relative">
+      <div className="mx-auto mb-12 max-w-2xl text-center sm:mb-16">
+        <span className="mb-3 inline-block text-xs font-extrabold uppercase tracking-[0.2em] text-[#e21b70]">Made for easy ordering</span>
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-4xl md:text-5xl font-extrabold text-[#3A0519] mb-4"
+          className="font-display text-3xl font-extrabold tracking-[-0.04em] text-[#3A0519] sm:text-5xl"
         >
           Why Choose Food Garden?
         </motion.h2>
-        <div className="w-24 h-1 bg-[#e21b70] mx-auto rounded-full"></div>
+        <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-gray-500 sm:text-base">A warm, effortless food experience from discovering your next meal to receiving it at your door.</p>
       </div>
 
       <motion.div
@@ -62,23 +65,24 @@ const FeaturesSection = () => {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10"
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
       >
         {features.map((feature) => (
           <motion.div
             key={feature.id}
             variants={itemVariants}
-            whileHover={{ y: -10 }}
-            className="bg-gray-50 rounded-2xl p-8 text-center shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group"
+            whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
+            className="elevated-card group rounded-[1.8rem] p-7 text-left transition-all duration-300 [transform-style:preserve-3d]"
           >
-            <div className="w-20 h-20 mx-auto bg-[#3A0519] text-white flex items-center justify-center rounded-full mb-6 group-hover:bg-[#e21b70] transition-colors duration-300 shadow-md">
+            <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#3A0519] text-white shadow-lg shadow-[#3a0519]/20 transition-all duration-300 group-hover:rotate-6 group-hover:bg-[#e21b70] group-hover:shadow-[#e21b70]/30">
               {feature.icon}
             </div>
-            <h3 className="text-2xl font-bold text-[#3A0519] mb-4">{feature.title}</h3>
-            <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+            <h3 className="font-display text-xl font-extrabold tracking-[-0.03em] text-[#3A0519]">{feature.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-gray-500">{feature.description}</p>
           </motion.div>
         ))}
       </motion.div>
+      </div>
     </section>
   );
 };

@@ -1,4 +1,5 @@
 @import 'react-toastify/dist/ReactToastify.css';
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,9 +7,12 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased selection:bg-accent selection:text-white;
-    font-family: 'Outfit', sans-serif;
+    @apply bg-[#fffafb] text-gray-900 antialiased selection:bg-accent selection:text-white;
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
   }
+
+  h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 }
 
 @layer utilities {
@@ -18,6 +22,26 @@
   
   .glass-dark {
     @apply bg-[#1a0009]/80 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .section-shell { @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10; }
+
+  .elevated-card {
+    @apply border border-white/70 bg-white shadow-[0_18px_45px_rgba(58,5,25,0.08)];
+    transform: translateZ(0);
+  }
+
+  .elevated-card:hover { box-shadow: 0 28px 58px rgba(58, 5, 25, 0.15); }
+
+  .hero-orb { animation: drift 9s ease-in-out infinite alternate; }
+
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(28px, 20px, 0) scale(1.12); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
   }
 
   /* Custom scrollbar for webkit */
