@@ -44,35 +44,29 @@ const RecommendedFoods = () => {
   };
 
   return (
-    <section className="bg-gradient-to-b from-white to-gray-50 py-24 px-6 sm:px-10 md:px-20 relative overflow-hidden">
+    <section className="relative overflow-hidden bg-gradient-to-b from-white to-[#fff8fb] py-20 sm:py-28">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#e21b70] opacity-5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#3A0519] opacity-5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
-      <div className="text-center mb-16 relative z-10">
+      <div className="section-shell relative z-10">
+      <div className="mb-12 text-center sm:mb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-[#e21b70] font-bold tracking-wider uppercase text-sm mb-2 block">
+          <span className="mb-3 block text-xs font-extrabold uppercase tracking-[0.2em] text-[#e21b70]">
             Curated For You
           </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#3A0519] mb-4">
+          <h2 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-[#3A0519] sm:text-5xl">
             Most Recommended Dishes
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
             Discover the highest-rated meals from our top local vendors, freshly prepared and delivered to your door.
           </p>
         </motion.div>
-        <motion.div 
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="w-24 h-1.5 bg-gradient-to-r from-[#e21b70] to-[#3A0519] mx-auto rounded-full mt-6"
-        ></motion.div>
       </div>
 
       <motion.div
@@ -80,17 +74,17 @@ const RecommendedFoods = () => {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10 max-w-7xl mx-auto"
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
       >
         {foods.map((food) => (
           <motion.div
             key={food.id}
             variants={itemVariants}
-            whileHover={{ y: -8 }}
-            className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:shadow-[0_20px_40px_rgb(226,27,112,0.15)] transition-all duration-300 group border border-gray-100 flex flex-col h-full"
+            whileHover={{ y: -8, rotateX: 1 }}
+            className="elevated-card group flex h-full flex-col overflow-hidden rounded-[1.75rem] transition-all duration-300"
           >
             {/* Image Container */}
-            <div className="relative w-full h-60 overflow-hidden cursor-pointer">
+            <div className="relative h-56 w-full cursor-pointer overflow-hidden sm:h-60">
               {/* Category Badge */}
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[#3A0519] text-xs font-bold py-1.5 px-3 rounded-full shadow-sm z-20">
                 {food.category}
@@ -117,9 +111,9 @@ const RecommendedFoods = () => {
             </div>
 
             {/* Content Container */}
-            <div className="p-6 flex flex-col flex-grow">
+            <div className="flex flex-grow flex-col p-6">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-2xl font-bold text-[#3A0519] group-hover:text-[#e21b70] transition-colors duration-300 line-clamp-1">
+                <h3 className="font-display text-xl font-extrabold tracking-[-0.03em] text-[#3A0519] transition-colors duration-300 group-hover:text-[#e21b70] line-clamp-1">
                   {food.name}
                 </h3>
               </div>
@@ -142,7 +136,7 @@ const RecommendedFoods = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleViewDetails(food.id)}
-                  className="w-full py-3.5 bg-gray-50 text-[#3A0519] border border-gray-200 rounded-xl font-bold hover:bg-[#e21b70] hover:text-white hover:border-[#e21b70] transition-all duration-300 shadow-sm flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 py-3.5 text-sm font-bold text-[#3A0519] shadow-sm transition-all duration-300 hover:border-[#e21b70] hover:bg-[#e21b70] hover:text-white"
                 >
                   <FaArrowRight />
                   View Details
@@ -152,6 +146,7 @@ const RecommendedFoods = () => {
           </motion.div>
         ))}
       </motion.div>
+      </div>
     </section>
   );
 };
