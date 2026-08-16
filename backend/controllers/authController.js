@@ -9,6 +9,11 @@ const { sendSignupOtpEmail, sendPasswordResetOtpEmail } = require("../utils/send
 
 const hashOtp = (otp) => crypto.createHash("sha256").update(String(otp)).digest("hex");
 const normaliseEmail = (email) => (typeof email === "string" ? email.trim().toLowerCase() : "");
+const otpMatches = (storedHash, otp) => {
+  if (!storedHash || typeof otp !== "string" || !/^\d{6}$/.test(otp)) return false;
+  const submittedHash = hashOtp(otp);
+  return crypto.timingSafeEqual(Buffer.from(storedHash, "hex"), Buffer.from(submittedHash, "hex"));
+};
 
 // Calculate recursive cooldown time, capped at 300 seconds (5 min) max
 const calculateCooldownSeconds = (attempts) => {
@@ -119,7 +124,7 @@ const verifyOtp = async (req, res, next) => {
       return res.status(400).json({ message: "This account is already verified" });
     }
 
-    if (!user.otp || !otp || user.otp !== hashOtp(otp)) {
+    if (!otpMatches(user.otp, otp)) {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
@@ -178,9 +183,8 @@ const resendOtp = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const email = normaliseEmail(req.body.email);
-    const { password, deviceMac, deviceInfo } = req.body;
+    const { password, deviceInfo } = req.body;
     const ip = getClientIp(req);
-    const currentDeviceMac = deviceMac || req.headers["x-device-mac"] || "Unknown Device";
     const userAgent = req.headers["user-agent"] || "Unknown";
 
     if (!email || !password) {
@@ -188,26 +192,20 @@ const login = async (req, res, next) => {
     }
 
     // 1. Check if IP or Device MAC is permanently blocked
-    const blockQuery = [{ type: "ip", value: ip, isActive: true }];
-    if (currentDeviceMac && currentDeviceMac !== "Unknown Device") {
-      blockQuery.push({ type: "deviceMac", value: currentDeviceMac, isActive: true });
-    }
-    const isBlocked = await BlockedEntity.findOne({ $or: blockQuery });
+    const isBlocked = await BlockedEntity.findOne({ type: "ip", value: ip, isActive: true });
     if (isBlocked) {
       return res.status(403).json({
         success: false,
         isBlocked: true,
-        message: `ACCESS BLOCKED: This ${isBlocked.type === "deviceMac" ? "Device (" + isBlocked.value + ")" : "IP (" + isBlocked.value + ")"} has been blocked due to multiple unauthorized login attempts.`,
+        message: "ACCESS BLOCKED: This network address has been blocked due to multiple unauthorized login attempts.",
       });
     }
 
     // 2. Check for active temporary lockout
     const alertQuery = {
-      $or: [
-        { email, status: "locked" },
-        { ip, status: "locked" },
-        ...(currentDeviceMac !== "Unknown Device" ? [{ deviceMac: currentDeviceMac, status: "locked" }] : []),
-      ],
+      email,
+      ip,
+      status: "locked",
       lockoutUntil: { $gt: new Date() },
     };
 
@@ -231,11 +229,9 @@ const login = async (req, res, next) => {
     if (!user || !isPasswordMatch) {
       // Find existing alert record or create new one
       let existingAlert = await SecurityAlert.findOne({
-        $or: [
-          { email, status: { $in: ["active", "locked"] } },
-          { ip, status: { $in: ["active", "locked"] } },
-          ...(currentDeviceMac !== "Unknown Device" ? [{ deviceMac: currentDeviceMac, status: { $in: ["active", "locked"] } }] : []),
-        ],
+        email,
+        ip,
+        status: { $in: ["active", "locked"] },
       }).sort({ updatedAt: -1 });
 
       const newAttemptCount = (existingAlert ? existingAlert.attemptCount : 0) + 1;
@@ -262,13 +258,11 @@ const login = async (req, res, next) => {
         timestamp: new Date(),
         reason: `Failed login attempt #${newAttemptCount} with invalid credentials.`,
         ip,
-        deviceMac: currentDeviceMac,
       };
 
       if (existingAlert) {
         existingAlert.email = email;
         existingAlert.ip = ip;
-        existingAlert.deviceMac = currentDeviceMac;
         existingAlert.attemptCount = newAttemptCount;
         existingAlert.severity = severity;
         existingAlert.status = status;
@@ -283,7 +277,6 @@ const login = async (req, res, next) => {
         existingAlert = await SecurityAlert.create({
           email,
           ip,
-          deviceMac: currentDeviceMac,
           attemptCount: newAttemptCount,
           severity,
           status,
@@ -296,26 +289,15 @@ const login = async (req, res, next) => {
         });
       }
 
-      // Auto-block device & IP if 10 or more attempts
+      // Do not permanently block an entire IP based only on failed credentials.
+      // Shared networks make that an attacker-controlled denial-of-service vector.
       if (newAttemptCount >= 10) {
-        await BlockedEntity.findOneAndUpdate(
-          { type: "ip", value: ip },
-          { type: "ip", value: ip, reason: "Exceeded 10 failed login attempts", blockedBy: "Automated Threat Defense", isActive: true },
-          { upsert: true }
-        );
-        if (currentDeviceMac && currentDeviceMac !== "Unknown Device") {
-          await BlockedEntity.findOneAndUpdate(
-            { type: "deviceMac", value: currentDeviceMac },
-            { type: "deviceMac", value: currentDeviceMac, reason: "Exceeded 10 failed login attempts", blockedBy: "Automated Threat Defense", isActive: true },
-            { upsert: true }
-          );
-        }
-
-        return res.status(403).json({
+        return res.status(429).json({
           success: false,
-          isBlocked: true,
+          isLocked: true,
+          remainingSeconds: cooldownSeconds,
           attempts: newAttemptCount,
-          message: "CRITICAL THREAT DETECTED: You have exceeded the maximum allowed login attempts (10+). Your Device and IP address have been permanently blocked.",
+          message: `Too many failed attempts. This sign-in is locked for ${cooldownSeconds} seconds.`,
         });
       }
 
@@ -341,7 +323,8 @@ const login = async (req, res, next) => {
     // 4. Successful login -> Clear any active lockout alerts for this email/IP
     await SecurityAlert.updateMany(
       {
-        $or: [{ email }, { ip }, ...(currentDeviceMac !== "Unknown Device" ? [{ deviceMac: currentDeviceMac }] : [])],
+        email,
+        ip,
         status: { $in: ["active", "locked"] },
       },
       { status: "resolved", lockoutUntil: null, attemptCount: 0 }
@@ -496,8 +479,8 @@ const getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone, password, description, avatar } = req.body;
-    const user = await User.findById(req.user.id || req.user._id);
+    const { name, phone, password, currentPassword, description, avatar } = req.body;
+    const user = await User.findById(req.user.id || req.user._id).select("+password");
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -507,6 +490,12 @@ exports.updateProfile = async (req, res) => {
     if (avatar) user.avatar = avatar;
     
     if (password && password.trim() !== "") {
+      if (!currentPassword || !(await user.matchPassword(currentPassword))) {
+        return res.status(400).json({ message: "Your current password is required to set a new password." });
+      }
+      if (password.length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters." });
+      }
       user.password = password; // pre-save hook in User model will hash it
     }
 

@@ -5,7 +5,7 @@ const blockedEntitySchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["ip", "deviceMac", "email"],
+      enum: ["ip"],
       required: true,
     },
     value: {

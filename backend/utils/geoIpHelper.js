@@ -1,16 +1,11 @@
 // backend/utils/geoIpHelper.js
 
 /**
- * Extracts the real client IP address from express request headers or socket.
+ * Gets the client IP as determined by Express. Forwarded headers are honoured
+ * only when server.js has explicitly configured trusted reverse proxies.
  */
 const getClientIp = (req) => {
-  let ip =
-    req.headers["cf-connecting-ip"] ||
-    req.headers["x-real-ip"] ||
-    (req.headers["x-forwarded-for"] ? req.headers["x-forwarded-for"].split(",")[0].trim() : null) ||
-    req.socket?.remoteAddress ||
-    req.ip ||
-    "127.0.0.1";
+  let ip = req.ip || req.socket?.remoteAddress || "127.0.0.1";
 
   if (ip.startsWith("::ffff:")) {
     ip = ip.substring(7);

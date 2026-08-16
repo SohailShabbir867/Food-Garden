@@ -25,6 +25,17 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 const server = http.createServer(app);
+const trustedProxy = process.env.TRUST_PROXY;
+if (trustedProxy) {
+  app.set(
+    "trust proxy",
+    /^\d+$/.test(trustedProxy)
+      ? Number(trustedProxy)
+      : trustedProxy === "true"
+        ? 1
+        : trustedProxy.split(",").map((value) => value.trim())
+  );
+}
 const clientOrigin = [
   process.env.CLIENT_URL,
   "http://localhost:5173",
@@ -32,7 +43,7 @@ const clientOrigin = [
 ].filter(Boolean);
 
 app.use(cors({ origin: clientOrigin, credentials: true }));
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 app.use(requestLogger); // Log all incoming API requests, endpoints, status codes, response times, and users
 app.use(checkSecurityBlock); // Enforce IP / Device MAC blocklist

@@ -2,6 +2,10 @@
 const SecurityAlert = require("../models/SecurityAlert");
 const BlockedEntity = require("../models/BlockedEntity");
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const allowedStatuses = new Set(["active", "locked", "blocked", "resolved", "all"]);
+const allowedSeverities = new Set(["low", "medium", "high", "critical", "all"]);
+
 /**
  * GET /api/admin/security/stats
  * Dashboard metrics for security threats and alerts.
@@ -47,28 +51,36 @@ const getSecurityAlerts = async (req, res, next) => {
     const { status, severity, search, page = 1, limit = 20 } = req.query;
     const filter = {};
 
+    if (status && !allowedStatuses.has(status)) {
+      return res.status(400).json({ success: false, message: "Invalid alert status." });
+    }
+    if (severity && !allowedSeverities.has(severity)) {
+      return res.status(400).json({ success: false, message: "Invalid alert severity." });
+    }
     if (status && status !== "all") {
       filter.status = status;
     }
     if (severity && severity !== "all") {
       filter.severity = severity;
     }
-    if (search) {
+    if (typeof search === "string" && search.trim()) {
+      const escapedSearch = escapeRegex(search.trim().slice(0, 100));
       filter.$or = [
-        { email: { $regex: search, $options: "i" } },
-        { ip: { $regex: search, $options: "i" } },
-        { deviceMac: { $regex: search, $options: "i" } },
-        { "location.city": { $regex: search, $options: "i" } },
-        { "location.country": { $regex: search, $options: "i" } },
+        { email: { $regex: escapedSearch, $options: "i" } },
+        { ip: { $regex: escapedSearch, $options: "i" } },
+        { "location.city": { $regex: escapedSearch, $options: "i" } },
+        { "location.country": { $regex: escapedSearch, $options: "i" } },
       ];
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const safePage = Math.max(1, Math.min(Number.parseInt(page, 10) || 1, 10_000));
+    const safeLimit = Math.max(1, Math.min(Number.parseInt(limit, 10) || 20, 100));
+    const skip = (safePage - 1) * safeLimit;
     const [alerts, total] = await Promise.all([
       SecurityAlert.find(filter)
         .sort({ updatedAt: -1 })
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(safeLimit),
       SecurityAlert.countDocuments(filter),
     ]);
 
@@ -77,8 +89,8 @@ const getSecurityAlerts = async (req, res, next) => {
       alerts,
       pagination: {
         total,
-        page: Number(page),
-        pages: Math.ceil(total / Number(limit)),
+        page: safePage,
+        pages: Math.ceil(total / safeLimit),
       },
     });
   } catch (error) {
@@ -107,8 +119,8 @@ const blockEntity = async (req, res, next) => {
   try {
     const { type, value, reason } = req.body;
 
-    if (!type || !value) {
-      return res.status(400).json({ success: false, message: "Type and Value are required." });
+    if (type !== "ip" || typeof value !== "string" || !value.trim()) {
+      return res.status(400).json({ success: false, message: "A valid IP address is required." });
     }
 
     const entity = await BlockedEntity.findOneAndUpdate(
@@ -124,7 +136,7 @@ const blockEntity = async (req, res, next) => {
     );
 
     // Update matching security alerts
-    const alertQuery = type === "ip" ? { ip: value } : { deviceMac: value };
+    const alertQuery = { ip: value };
     await SecurityAlert.updateMany(alertQuery, { status: "blocked", severity: "critical" });
 
     res.json({
@@ -145,14 +157,14 @@ const unblockEntity = async (req, res, next) => {
   try {
     const { type, value } = req.body;
 
-    if (!type || !value) {
-      return res.status(400).json({ success: false, message: "Type and Value are required." });
+    if (type !== "ip" || typeof value !== "string" || !value.trim()) {
+      return res.status(400).json({ success: false, message: "A valid IP address is required." });
     }
 
     await BlockedEntity.deleteOne({ type, value });
 
     // Also unblock matching alerts and clear lockouts
-    const alertQuery = type === "ip" ? { ip: value } : { deviceMac: value };
+    const alertQuery = { ip: value };
     await SecurityAlert.updateMany(alertQuery, {
       status: "resolved",
       lockoutUntil: null,

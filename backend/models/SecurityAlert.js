@@ -14,11 +14,6 @@ const securityAlertSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    deviceMac: {
-      type: String,
-      default: "Unknown Device",
-      trim: true,
-    },
     deviceInfo: {
       browser: { type: String, default: "Unknown" },
       os: { type: String, default: "Unknown" },
@@ -67,7 +62,6 @@ const securityAlertSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
         reason: { type: String, default: "Failed login attempt" },
         ip: String,
-        deviceMac: String,
       },
     ],
   },
