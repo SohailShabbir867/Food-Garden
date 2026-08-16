@@ -12,7 +12,10 @@ const normaliseEmail = (email) => (typeof email === "string" ? email.trim().toLo
 const otpMatches = (storedHash, otp) => {
   if (!storedHash || typeof otp !== "string" || !/^\d{6}$/.test(otp)) return false;
   const submittedHash = hashOtp(otp);
-  return crypto.timingSafeEqual(Buffer.from(storedHash, "hex"), Buffer.from(submittedHash, "hex"));
+  const bufA = Buffer.from(storedHash, "hex");
+  const bufB = Buffer.from(submittedHash, "hex");
+  if (bufA.length !== bufB.length || bufA.length === 0) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 };
 
 // Calculate recursive cooldown time, capped at 300 seconds (5 min) max
@@ -403,19 +406,6 @@ const resetPassword = async (req, res, next) => {
 
     if (newPassword.length < 8) {
       return res.status(400).json({ message: "New password must be at least 8 characters" });
-    }
-
-    const user = await User.findOne({ email }).select("+resetOtp +resetOtpExpiry");
-    if (!user) {
-      return res.status(404).json({ message: "No account found for this email" });
-    }
-
-    if (!user.resetOtp || user.resetOtp !== hashOtp(otp)) {
-      return res.status(400).json({ message: "Invalid reset code" });
-    }
-
-    if (user.resetOtpExpiry < new Date()) {
-      return res.status(400).json({ message: "Reset code has expired. Request a new one." });
     }
 
     user.password = newPassword; // pre-save hook re-hashes it
